@@ -1,0 +1,49 @@
+apiVersion: pubsub.gcp.m.upbound.io/v1beta1
+kind: Topic
+metadata:
+  name: ${{ values.name }}-topic
+  namespace: crossplane-system
+spec:
+  forProvider: {}
+  providerConfigRef:
+    kind: ProviderConfig
+    name: default
+---
+apiVersion: pubsub.gcp.m.upbound.io/v1beta1
+kind: Subscription
+metadata:
+  name: ${{ values.name }}-subscription
+  namespace: crossplane-system
+spec:
+  forProvider:
+    topic: ${{ values.name }}-topic
+    deadLetterPolicy:
+      deadLetterTopicRef:
+        name: ${{ values.name }}-dlq
+      maxDeliveryAttempts: 5
+  providerConfigRef:
+    kind: ProviderConfig
+    name: default
+---
+apiVersion: pubsub.gcp.m.upbound.io/v1beta1
+kind: Topic
+metadata:
+  name: ${{ values.name }}-dlq
+  namespace: crossplane-system
+spec:
+  forProvider: {}
+  providerConfigRef:
+    kind: ProviderConfig
+    name: default
+---
+apiVersion: pubsub.gcp.m.upbound.io/v1beta1
+kind: Subscription
+metadata:
+  name: ${{ values.name }}-dlq-subscription
+  namespace: crossplane-system
+spec:
+  forProvider:
+    topic: ${{ values.name }}-dlq
+  providerConfigRef:
+    kind: ProviderConfig
+    name: default

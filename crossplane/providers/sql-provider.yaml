@@ -1,0 +1,7 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-gcp-sql
+  namespace: crossplane-system
+spec:
+  package: xpkg.upbound.io/upbound/provider-gcp-sql:v2.4.0
