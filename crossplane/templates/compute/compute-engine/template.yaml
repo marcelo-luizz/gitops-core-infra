@@ -52,14 +52,14 @@ spec:
       name: Create Pull Request
       action: publish:github:pull-request
       input:
-        repoUrl: github.com?repo=gitops-app-infra&owner=marcelo-luizz
+        repoUrl: github.com?repo=gitops-core-infra&owner=marcelo-luizz
         branchName: create-instance-${{ parameters.instanceName }}
         title: "feat(compute): add instance ${{ parameters.instanceName }} in ${{ parameters.environment }}"
         description: "Este PR foi gerado via Backstage."
         # Pegamos o arquivo renderizado na pasta temporária
         sourcePath: ./infra-temp
         # E jogamos para a pasta de destino final no GitOps
-        targetPath: environments/${{ parameters.environment }}/compute/compute-engine/
+        targetPath: environments/integration/southamerica-east1/compute/compute-engine/${{ parameters.instanceName }}
 
   output:
     links:
