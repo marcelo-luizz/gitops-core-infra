@@ -22,15 +22,17 @@ spec:
           title: Environment
           type: string
           enum:
-            - dev
-            - homolog
+            - integration
+            - pre-prod
             - prod
-          default: dev
+          default: integration
         team:
           title: Team
           type: string
-          enum: [team-a, team-b, team-c]
-
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
   steps:
     # 1. Busca a PASTA de templates. 
     # Ele vai processar todos os arquivos lá dentro (incluindo o que renomeamos para {{name}}.yaml)
@@ -59,7 +61,7 @@ spec:
         # Pegamos o arquivo renderizado na pasta temporária
         sourcePath: ./infra-temp
         # E jogamos para a pasta de destino final no GitOps
-        targetPath: environments/integration/southamerica-east1/compute/compute-engine/${{ parameters.instanceName }}
+        targetPath: environments/${{ parameters.environment }}/southamerica-east1/compute/compute-engine/${{ parameters.instanceName }}
 
   output:
     links:
