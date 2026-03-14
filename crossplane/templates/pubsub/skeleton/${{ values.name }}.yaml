@@ -3,6 +3,8 @@ kind: Topic
 metadata:
   name: ${{ values.name }}-topic
   namespace: crossplane-system
+  annotations:
+    team: ${{ values.team }}
 spec:
   forProvider: {}
   providerConfigRef:
@@ -14,6 +16,8 @@ kind: Subscription
 metadata:
   name: ${{ values.name }}-subscription
   namespace: crossplane-system
+  annotations:
+    team: ${{ values.team }}
 spec:
   forProvider:
     topic: ${{ values.name }}-topic
@@ -30,6 +34,8 @@ kind: Topic
 metadata:
   name: ${{ values.name }}-dlq
   namespace: crossplane-system
+  annotations:
+    team: ${{ values.team }}
 spec:
   forProvider: {}
   providerConfigRef:
@@ -41,6 +47,8 @@ kind: Subscription
 metadata:
   name: ${{ values.name }}-dlq-subscription
   namespace: crossplane-system
+  annotations:
+    team: ${{ values.team }}
 spec:
   forProvider:
     topic: ${{ values.name }}-dlq
