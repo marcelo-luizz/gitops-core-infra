@@ -4,6 +4,8 @@ metadata:
   name: pubsub-v1
   title: Create PubSub Topic via Crossplane
   description: Gera um manifesto Crossplane e abre um PR no repositório de GitOps.
+  tags:
+    - app-infra
 spec:
   owner: team-platform
   type: service
