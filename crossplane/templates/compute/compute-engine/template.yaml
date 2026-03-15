@@ -112,7 +112,7 @@ spec:
 
           Quando este PR for aprovado (Merge), o seguinte fluxo GitOps "App of Apps" será acionado:
 
-          ![Fluxo GitOps](https://raw.githubusercontent.com/marcelo-luizz/gitops-core-infra/blob/main/crossplane/templates/compute/compute-engine/gitops-app-infra.png)
+          ![Fluxo GitOps](https://raw.githubusercontent.com/marcelo-luizz/gitops-core-infra/main/crossplane/templates/compute/compute-engine/gitops-app-infra.png)
 
           ### 📂 Estrutura de Diretórios e Escopo
 
