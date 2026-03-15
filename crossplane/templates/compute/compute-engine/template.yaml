@@ -4,6 +4,8 @@ metadata:
   name: compute-engine-v1
   title: Create Compute Engine via Crossplane-v1
   description: Gera um manifesto Crossplane e abre um PR no repositório de GitOps.
+  labels:
+    core-infra: "true"
   tags:
     - core-infra
 spec:
