@@ -92,8 +92,10 @@ spec:
         
         # Lógica de seleção de Caminho (TargetPath)
         targetPath: >-
-          ${{ 'environments/' + parameters.environment + '/team-platform/pubsub/' + parameters.instanceName if parameters.scope == 'app-infra' 
+          ${{ 'environments/' + parameters.environment + '/' + (parameters.team | parseEntityRef).name + '/compute/compute-engine/' + parameters.instanceName if parameters.scope == 'app-infra' 
               else 'environments/' + parameters.environment + '/southamerica-east1/compute/compute-engine/' + parameters.instanceName }}
+
+  output:
 
   output:
     links:
