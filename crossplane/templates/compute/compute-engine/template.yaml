@@ -2,28 +2,44 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: compute-engine-v1
-  title: Create Compute Engine via Crossplane-v1
-  description: Gera um manifesto Crossplane e abre um PR no repositório de GitOps.
-  annotations:
-    security.jeitto.com/tier: "core-infra" 
+  title: provisionamento de Infraestrutura (Crossplane)
+  description: Gera manifestos Crossplane Upbound e abre PR no repositório correto (App ou Core).
   tags:
-    - core-infra
+    - gcp
+    - crossplane
+    - infrastructure
 spec:
   owner: team-platform
   type: service
 
   parameters:
-    - title: Dados da Máquina
+    - title: Escopo e Destino
+      required:
+        - scope
+      properties:
+        scope:
+          title: Escopo de Implantação
+          type: string
+          description: Defina se esta infraestrutura é para uma aplicação ou infraestrutura core.
+          enum:
+            - app-infra
+            - core-infra
+          enumNames:
+            - "App Infra (gitops-app-infra)"
+            - "Core Infra (gitops-core-infra)"
+
+    - title: Configurações da Instância
       required:
         - instanceName
         - environment
+        - team
       properties:
         instanceName:
-          title: Instance Name
+          title: Nome da Instância / Recurso
           type: string
-          description: Nome único da instância Compute Engine.
+          description: Nome único (ex: my-service-topic ou my-vm-name).
         environment:
-          title: Environment
+          title: Ambiente
           type: string
           enum:
             - integration
@@ -31,43 +47,59 @@ spec:
             - prod
           default: integration
         team:
-          title: Team
+          title: Time Responsável
           type: string
           ui:field: OwnerPicker
           ui:options:
             allowedKinds:
               - Group
+
   steps:
-    # 1. Busca a PASTA de templates. 
-    # Ele vai processar todos os arquivos lá dentro (incluindo o que renomeamos para {{name}}.yaml)
+    # 1. Renderiza os arquivos do skeleton
     - id: fetch-template
-      name: Fetch Crossplane Template
+      name: Renderizando Manifestos
       action: fetch:template
       input:
-        # Apontamos para a PASTA, não para o arquivo direto.
-        # O Backstage assume que o caminho é relativo ao local deste template.
         url: ./skeleton
         values:
           name: ${{ parameters.instanceName }}
           environment: ${{ parameters.environment }}
           team: ${{ parameters.team }}
+          scope: ${{ parameters.scope }}
         targetPath: ./infra-temp
 
-    # 2. Abre o Pull Request
+    # 2. Publica o PR com Lógica Condicional de Repositório e Caminho
     - id: create-pr
-      name: Create Pull Request
+      name: Criando Pull Request
       action: publish:github:pull-request
       input:
-        repoUrl: github.com?repo=gitops-core-infra&owner=marcelo-luizz
-        branchName: create-instance-${{ parameters.instanceName }}
-        title: "feat(compute): add instance ${{ parameters.instanceName }} in ${{ parameters.environment }}"
-        description: "Este PR foi gerado via Backstage."
-        # Pegamos o arquivo renderizado na pasta temporária
+        # Lógica para trocar o REPOSITÓRIO baseado no escopo escolhido
+        repoUrl: >
+          ${{ 'github.com?repo=gitops-app-infra&owner=marcelo-luizz' if parameters.scope == 'app-infra' 
+              else 'github.com?repo=gitops-core-infra&owner=marcelo-luizz' }}
+        
+        branchName: infra-${{ parameters.scope }}-${{ parameters.instanceName }}
+        title: "infra(${{ parameters.scope }}): add ${{ parameters.instanceName }} em ${{ parameters.environment }}"
+        description: |
+          ### 🚀 Novo Recurso de Infraestrutura
+          - **Tipo:** ${{ parameters.scope }}
+          - **Ambiente:** ${{ parameters.environment }}
+          - **Solicitante:** ${{ parameters.team }}
+          
+          Gerado automaticamente via Backstage IDP.
+        
         sourcePath: ./infra-temp
-        # E jogamos para a pasta de destino final no GitOps
-        targetPath: environments/${{ parameters.environment }}/southamerica-east1/compute/compute-engine/${{ parameters.instanceName }}
+        
+        # Lógica para trocar o CAMINHO (TargetPath) baseado no escopo escolhido
+        targetPath: >
+          ${{ 'environments/' + parameters.environment + '/team-platform/pubsub/' + parameters.instanceName if parameters.scope == 'app-infra' 
+              else 'environments/' + parameters.environment + '/southamerica-east1/compute/compute-engine/' + parameters.instanceName }}
 
   output:
     links:
-      - title: Acompanhar Pull Request
+      - title: 🔗 Acompanhar Pull Request no GitHub
         url: ${{ steps['create-pr'].output.remoteUrl }}
+      - title: 📂 Ver Repositório de Destino
+        url: >
+          ${{ 'https://github.com/marcelo-luizz/gitops-app-infra' if parameters.scope == 'app-infra' 
+              else 'https://github.com/marcelo-luizz/gitops-core-infra' }}
