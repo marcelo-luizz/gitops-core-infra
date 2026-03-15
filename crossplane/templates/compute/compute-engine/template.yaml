@@ -103,3 +103,27 @@ spec:
         url: >-
           ${{ 'https://github.com/marcelo-luizz/gitops-app-infra' if parameters.scope == 'app-infra' 
               else 'https://github.com/marcelo-luizz/gitops-core-infra' }}
+    text:
+      - title: "📘 Como funciona este provisionamento?"
+        content: |
+          Este template utiliza um fluxo **GitOps Progressivo**. Veja o que está acontecendo:
+
+          ### 1. Repositório de Destino
+          Como você selecionou o escopo **${{ parameters.scope }}**, o manifesto foi enviado para:
+          - **Repo:** `marcelo-luizz/${{ 'gitops-app-infra' if parameters.scope == 'app-infra' else 'gitops-core-infra' }}`
+          - **Pasta:** `environments/${{ parameters.environment }}/...`
+
+          ### 2. O Ciclo de Sincronização
+          ```mermaid
+          graph TD
+            A[Backstage] -->|1. Abre PR| B(GitHub Repo)
+            B -->|2. Merge| C{ArgoCD App of Apps}
+            C -->|3. Discovery| D[Argo Application]
+            D -->|4. Sync| E[Cluster K8s]
+            E -->|5. Provision| F[GCP Resource - Upbound]
+          ```
+
+          ### 3. ArgoCD App of Apps
+          O ArgoCD está configurado para ler recursivamente a pasta `environments/${{ parameters.environment }}`. 
+          - Se o arquivo for novo, o Argo cria automaticamente um recurso sincronizado.
+          - O Crossplane (Upbound) garantirá que o recurso no GCP não sofra *drift* (alteração manual).          
