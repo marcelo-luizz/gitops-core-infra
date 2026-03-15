@@ -2,12 +2,11 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: compute-engine-v1
-  title: provisionamento de Infraestrutura (Crossplane)
-  description: Gera manifestos Crossplane Upbound e abre PR no repositório correto (App ou Core).
+  title: Provisionamento de Infraestrutura (Crossplane)
+  description: "Gera manifestos Crossplane Upbound e abre PR no repositório correto (App ou Core)."
   tags:
     - gcp
     - crossplane
-    - infrastructure
 spec:
   owner: team-platform
   type: service
@@ -20,7 +19,7 @@ spec:
         scope:
           title: Escopo de Implantação
           type: string
-          description: Defina se esta infraestrutura é para uma aplicação ou infraestrutura core.
+          description: "Defina se esta infraestrutura é para uma aplicação ou infraestrutura core."
           enum:
             - app-infra
             - core-infra
@@ -37,7 +36,8 @@ spec:
         instanceName:
           title: Nome da Instância / Recurso
           type: string
-          description: Nome único (ex: my-service-topic ou my-vm-name).
+          # CORREÇÃO AQUI: Aspas duplas para evitar erro no ":"
+          description: "Nome único (ex: my-service-topic ou my-vm-name)."
         environment:
           title: Ambiente
           type: string
@@ -55,7 +55,6 @@ spec:
               - Group
 
   steps:
-    # 1. Renderiza os arquivos do skeleton
     - id: fetch-template
       name: Renderizando Manifestos
       action: fetch:template
@@ -68,38 +67,26 @@ spec:
           scope: ${{ parameters.scope }}
         targetPath: ./infra-temp
 
-    # 2. Publica o PR com Lógica Condicional de Repositório e Caminho
     - id: create-pr
       name: Criando Pull Request
       action: publish:github:pull-request
       input:
-        # Lógica para trocar o REPOSITÓRIO baseado no escopo escolhido
+        # Lógica de Repositório
         repoUrl: >
           ${{ 'github.com?repo=gitops-app-infra&owner=marcelo-luizz' if parameters.scope == 'app-infra' 
               else 'github.com?repo=gitops-core-infra&owner=marcelo-luizz' }}
         
-        branchName: infra-${{ parameters.scope }}-${{ parameters.instanceName }}
+        branchName: "infra-${{ parameters.scope }}-${{ parameters.instanceName }}"
         title: "infra(${{ parameters.scope }}): add ${{ parameters.instanceName }} em ${{ parameters.environment }}"
-        description: |
-          ### 🚀 Novo Recurso de Infraestrutura
-          - **Tipo:** ${{ parameters.scope }}
-          - **Ambiente:** ${{ parameters.environment }}
-          - **Solicitante:** ${{ parameters.team }}
-          
-          Gerado automaticamente via Backstage IDP.
-        
+        description: "Este PR foi gerado automaticamente via Backstage IDP."
         sourcePath: ./infra-temp
         
-        # Lógica para trocar o CAMINHO (TargetPath) baseado no escopo escolhido
+        # Lógica de Caminho de Destino (TargetPath)
         targetPath: >
           ${{ 'environments/' + parameters.environment + '/team-platform/pubsub/' + parameters.instanceName if parameters.scope == 'app-infra' 
               else 'environments/' + parameters.environment + '/southamerica-east1/compute/compute-engine/' + parameters.instanceName }}
 
   output:
     links:
-      - title: 🔗 Acompanhar Pull Request no GitHub
+      - title: "🔗 Acompanhar Pull Request no GitHub"
         url: ${{ steps['create-pr'].output.remoteUrl }}
-      - title: 📂 Ver Repositório de Destino
-        url: >
-          ${{ 'https://github.com/marcelo-luizz/gitops-app-infra' if parameters.scope == 'app-infra' 
-              else 'https://github.com/marcelo-luizz/gitops-core-infra' }}
