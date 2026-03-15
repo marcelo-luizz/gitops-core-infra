@@ -106,24 +106,30 @@ spec:
     text:
       - title: "📘 Como funciona este provisionamento?"
         content: |
-          Este template utiliza um fluxo **GitOps Progressivo**. Veja o que está acontecendo:
+          Parabéns! O seu recurso foi solicitado e o Pull Request foi criado.
 
-          ### 1. Repositório de Destino
-          Como você selecionou o escopo **${{ parameters.scope }}**, o manifesto foi enviado para:
-          - **Repo:** `marcelo-luizz/${{ 'gitops-app-infra' if parameters.scope == 'app-infra' else 'gitops-core-infra' }}`
-          - **Pasta:** `environments/${{ parameters.environment }}/...`
+          ### 🚀 Fluxo de Provisionamento
 
-          ### 2. O Ciclo de Sincronização
-          ```mermaid
-          graph TD
-            A[Backstage] -->|1. Abre PR| B(GitHub Repo)
-            B -->|2. Merge| C{ArgoCD App of Apps}
-            C -->|3. Discovery| D[Argo Application]
-            D -->|4. Sync| E[Cluster K8s]
-            E -->|5. Provision| F[GCP Resource - Upbound]
+          Quando este PR for aprovado (Merge), o seguinte fluxo GitOps "App of Apps" será acionado:
+
+          ![Fluxo GitOps](./gitops-app-infra.png)
+
+          ### 📂 Estrutura de Diretórios e Escopo
+
+          O manifesto foi enviado para o repositório correto (`gitops-${{ parameters.scope }}`) e organizado na seguinte estrutura:
+
+          ```
+          environments/
+          └── ${{ parameters.environment }}
+              └── ${{ parameters.region or 'squad-folder' }} # Dependendo do escopo
+                  └── ${{ parameters.scope }}
+                      └── ${{ parameters.instanceName }}/
+                          └── resource.yaml
           ```
 
-          ### 3. ArgoCD App of Apps
-          O ArgoCD está configurado para ler recursivamente a pasta `environments/${{ parameters.environment }}`. 
-          - Se o arquivo for novo, o Argo cria automaticamente um recurso sincronizado.
-          - O Crossplane (Upbound) garantirá que o recurso no GCP não sofra *drift* (alteração manual).          
+          ### 🔄 Sincronização e Drift
+
+          - O ArgoCD Root detecta a nova pasta.
+          - O ArgoCD Child é criado automaticamente.
+          - O Crossplane provisiona o recurso GCP usando o provedor da Upbound.
+          - Se houver alteração manual no console do GCP (drift), o Crossplane reverterá para garantir a configuração Git.
