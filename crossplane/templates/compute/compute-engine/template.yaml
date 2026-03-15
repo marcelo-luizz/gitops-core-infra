@@ -20,22 +20,16 @@ spec:
         scope:
           title: Escopo de Implantação
           type: string
-          description: >
-            Selecione o destino da infraestrutura. 
+          description: |
+            💡 **App Infra (Padrão)**: Para recursos que servem diretamente sua aplicação (PubSub, Buckets). **Uso geral para times de engenharia.**
+            
+            🏗️ **Core Infra**: Para componentes de base e fundação. **Uso restrito ao time de Plataforma/SRE.**
           enum:
             - app-infra
             - core-infra
           enumNames:
             - "App Infra (Uso Geral para Times de Engenharia)"
             - "Core Infra (Infraestrutura de Base/Plataforma)"
-          # O ui:help adiciona aquele texto explicativo que ajuda na decisão
-        description_helper:
-          type: string
-          title: " " # Título vazio para não poluir
-          description: >
-            💡 **App Infra**: Destinado a recursos que suportam sua aplicação diretamente, como Filas (PubSub), Buckets (Storage),etc. 
-            
-            🏗️ **Core Infra**: Reservado para componentes de base da nuvem, como VPCs, Clusters GKE, ou instâncias de gerência de rede.
     - title: Configurações da Instância
       required:
         - instanceName
