@@ -7,6 +7,7 @@ metadata:
   tags:
     - gcp
     - crossplane
+    - infrastructure
 spec:
   owner: team-platform
   type: service
@@ -36,7 +37,6 @@ spec:
         instanceName:
           title: Nome da Instância / Recurso
           type: string
-          # CORREÇÃO AQUI: Aspas duplas para evitar erro no ":"
           description: "Nome único (ex: my-service-topic ou my-vm-name)."
         environment:
           title: Ambiente
@@ -55,6 +55,7 @@ spec:
               - Group
 
   steps:
+    # 1. Renderiza os manifestos do skeleton para uma pasta temporária
     - id: fetch-template
       name: Renderizando Manifestos
       action: fetch:template
@@ -67,22 +68,30 @@ spec:
           scope: ${{ parameters.scope }}
         targetPath: ./infra-temp
 
+    # 2. Publica o Pull Request com lógica de decisão de repositório e caminho
     - id: create-pr
       name: Criando Pull Request
       action: publish:github:pull-request
       input:
-        # Lógica de Repositório
-        repoUrl: >
+        # Lógica de seleção de Repositório (Uso do >- para evitar \n no nome)
+        repoUrl: >-
           ${{ 'github.com?repo=gitops-app-infra&owner=marcelo-luizz' if parameters.scope == 'app-infra' 
               else 'github.com?repo=gitops-core-infra&owner=marcelo-luizz' }}
         
         branchName: "infra-${{ parameters.scope }}-${{ parameters.instanceName }}"
         title: "infra(${{ parameters.scope }}): add ${{ parameters.instanceName }} em ${{ parameters.environment }}"
-        description: "Este PR foi gerado automaticamente via Backstage IDP."
+        description: |
+          ### 🚀 Novo Recurso de Infraestrutura
+          - **Tipo:** ${{ parameters.scope }}
+          - **Ambiente:** ${{ parameters.environment }}
+          - **Solicitante:** ${{ parameters.team }}
+          
+          Gerado automaticamente via Backstage IDP.
+        
         sourcePath: ./infra-temp
         
-        # Lógica de Caminho de Destino (TargetPath)
-        targetPath: >
+        # Lógica de seleção de Caminho (TargetPath)
+        targetPath: >-
           ${{ 'environments/' + parameters.environment + '/team-platform/pubsub/' + parameters.instanceName if parameters.scope == 'app-infra' 
               else 'environments/' + parameters.environment + '/southamerica-east1/compute/compute-engine/' + parameters.instanceName }}
 
@@ -90,3 +99,7 @@ spec:
     links:
       - title: "🔗 Acompanhar Pull Request no GitHub"
         url: ${{ steps['create-pr'].output.remoteUrl }}
+      - title: "📂 Ver Repositório de Destino"
+        url: >-
+          ${{ 'https://github.com/marcelo-luizz/gitops-app-infra' if parameters.scope == 'app-infra' 
+              else 'https://github.com/marcelo-luizz/gitops-core-infra' }}
