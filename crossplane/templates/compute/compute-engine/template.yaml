@@ -21,9 +21,8 @@ spec:
           title: Escopo de Implantação
           type: string
           description: |
-            💡 **App Infra (Padrão)**: Para recursos que servem diretamente sua aplicação (PubSub, Buckets). **Uso geral para times de engenharia.**
-            
-            🏗️ **Core Infra**: Para componentes de base e fundação. **Uso restrito ao time de Plataforma/SRE.**
+            * **App Infra (Padrão):** Para recursos que servem diretamente sua aplicação (PubSub, Buckets). Uso geral para times de engenharia
+            * **Core Infra:**Para componentes de base e fundação. Uso restrito ao time de Plataforma/SRE.
           enum:
             - app-infra
             - core-infra
