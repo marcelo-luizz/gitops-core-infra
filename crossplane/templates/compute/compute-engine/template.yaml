@@ -13,23 +13,23 @@ spec:
   type: service
 
   parameters:
-    - title: Escopo e Destino
-      required:
-        - scope
-      properties:
-        scope:
-          title: Escopo de Implantação
-          type: string
-          ui:widget: radio
-          description: |
-            * **App Infra (Padrão):** Para recursos que servem diretamente sua aplicação (PubSub, Buckets). Uso geral para times de engenharia.
-            * **Core Infra:** Para componentes de base e fundação. Uso restrito ao time de Plataforma/SRE.
-          enum:
-            - app-infra
-            - core-infra
-          enumNames:
-            - "App Infra (Uso Geral para Times de Engenharia)"
-            - "Core Infra (Infraestrutura de Base/Plataforma)"
+    # - title: Escopo e Destino
+    #   required:
+    #     - scope
+    #   properties:
+        # scope:
+        #   title: Escopo de Implantação
+        #   type: string
+        #   ui:widget: radio
+        #   description: |
+        #     * **App Infra (Padrão):** Para recursos que servem diretamente sua aplicação (PubSub, Buckets). Uso geral para times de engenharia.
+        #     * **Core Infra:** Para componentes de base e fundação. Uso restrito ao time de Plataforma/SRE.
+        #   enum:
+        #     - app-infra
+        #     - core-infra
+        #   enumNames:
+        #     - "App Infra (Uso Geral para Times de Engenharia)"
+        #     - "Core Infra (Infraestrutura de Base/Plataforma)"
     - title: Configurações da Instância
       required:
         - instanceName
@@ -55,6 +55,19 @@ spec:
           ui:options:
             allowedKinds:
               - Group
+        scope:
+          title: Escopo de Implantação
+          type: boolean
+          ui:widget: checkbox
+          description: |
+            * **App Infra (Padrão):** Para recursos que servem diretamente sua aplicação (PubSub, Buckets). Uso geral para times de engenharia.
+            * **Core Infra:** Para componentes de base e fundação. Uso restrito ao time de Plataforma/SRE.
+          enum:
+            - app-infra
+            - core-infra
+          enumNames:
+            - "App Infra (Uso Geral para Times de Engenharia)"
+            - "Core Infra (Infraestrutura de Base/Plataforma)"
 
   steps:
     - id: fetch-template
