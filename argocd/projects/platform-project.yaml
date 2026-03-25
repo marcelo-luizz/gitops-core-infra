@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform-full-access
+  namespace: argocd
+  # Finalizer garante que o projeto não seja deletado se houver apps vinculados
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Projeto com acesso total para serviços de plataforma
+  # Permite qualquer repositório Git/Helm
+  sourceRepos:
+    - "*"
+  # Permite deploy em QUALQUER namespace e QUALQUER cluster conectado
+  destinations:
+    - namespace: "*"
+      server: "*"
+  # Permite a criação de recursos de nível de CLUSTER (Ex: Namespaces, Nodes, ClusterRoles)
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  # Permite a criação de recursos de nível de NAMESPACE (Ex: Pods, Deployments, Services)
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  # Monitora recursos que não fazem parte do manifesto mas estão no namespace
+  orphanedResources:
+    warn: true
