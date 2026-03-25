@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: core-infra-platform
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - name: argocd-projects
+            path: gitops-core-infra/argocd/projects
+            namespace: argocd
+          # - name: crossplane-providers
+          #   path: gitops-core-infra/crossplane/providers
+          #   namespace: crossplane-system
+          # - name: crossplane-provider-config
+          #   path: gitops-core-infra/crossplane/provider-config
+          #   namespace: crossplane-system
+          # - name: crossplane-xrds
+          #   path: gitops-core-infra/crossplane/composite-resource-definition
+          #   namespace: crossplane-system
+          # - name: crossplane-compositions
+          #   path: gitops-core-infra/crossplane/composition
+          #   namespace: crossplane-system
+  template:
+    metadata:
+      name: "{{.name}}"
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/marcelo-luizz/gitops-core-infra
+        targetRevision: HEAD
+        path: "{{.path}}"
+        directory:
+          recurse: true
+          include: "*.yaml"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{.namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
