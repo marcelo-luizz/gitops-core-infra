@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/marcelo-luizz/gitops-core-infra
     targetRevision: HEAD
-    path: environments/integration
+    path: environments/integration/southamerica-east1
     directory:
       recurse: true
       include: "*.yaml"
