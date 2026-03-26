@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: core-infra-environments
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/marcelo-luizz/gitops-core-infra
+        revision: HEAD
+        directories:
+          - path: gitops-core-infra/environments/*
+  template:
+    metadata:
+      name: "{{.path.basename}}-bootstrap"
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/marcelo-luizz/gitops-core-infra
+        targetRevision: HEAD
+        path: "{{.path.path}}"
+        directory:
+          recurse: true
+          include: "*.yaml"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: crossplane-system
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
