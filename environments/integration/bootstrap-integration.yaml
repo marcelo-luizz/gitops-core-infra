@@ -10,10 +10,10 @@ spec:
   source:
     repoURL: https://github.com/marcelo-luizz/gitops-core-infra
     targetRevision: HEAD
-    path: environments/integration/southamerica-east1
+    path: environments/integration
     directory:
       recurse: true
-      include: "*.yaml"
+      include: "{**/*.yaml,**/*.yml}"
   destination:
     server: https://kubernetes.default.svc
     namespace: crossplane-system
