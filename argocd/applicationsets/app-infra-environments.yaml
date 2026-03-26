@@ -14,7 +14,7 @@ spec:
           - path: environments/*
   template:
     metadata:
-      name: "{{.path.basename}}-bootstrap"
+      name: "app-infra-{{.path.basename}}-bootstrap"
       namespace: argocd
       finalizers:
         - resources-finalizer.argocd.argoproj.io
