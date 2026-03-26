@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-bootstrap-integration
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: https://github.com/marcelo-luizz/gitops-core-infra
+        revision: HEAD
+        # Ele vai buscar qualquer pasta dentro de 'applications' em todos os níveis
+        directories:
+          - path: argocd/cluster-bootstrap/integration/applications/*/*
+  template:
+    metadata:
+      # Ex: int-external-gateway, int-external-secrets
+      name: "integration-{{.path.basename}}" 
+      namespace: argocd
+    spec:
+      project: platform-full-access
+      source:
+        repoURL: https://github.com/marcelo-luizz/gitops-core-infra
+        targetRevision: HEAD
+        path: "{{.path.path}}"
+        directory:
+          recurse: true
+      destination:
+        server: https://kubernetes.default.svc
+        # Aqui você pode usar uma lógica de pasta ou manter fixo
+        namespace: argocd 
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
