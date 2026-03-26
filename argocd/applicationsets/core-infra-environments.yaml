@@ -26,7 +26,7 @@ spec:
         path: "{{.path.path}}"
         directory:
           recurse: true
-          include: "*.yaml"
+          include: "{**/*.yaml,**/*.yml}"
       destination:
         server: https://kubernetes.default.svc
         namespace: crossplane-system
