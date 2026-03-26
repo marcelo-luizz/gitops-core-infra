@@ -25,6 +25,7 @@ spec:
         path: "{{.path.path}}"
         directory:
           recurse: true
+          include: "{**/*.yaml,**/*.yml}"
       destination:
         server: https://kubernetes.default.svc
         # Aqui você pode usar uma lógica de pasta ou manter fixo
