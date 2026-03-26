@@ -11,7 +11,7 @@ spec:
         repoURL: https://github.com/marcelo-luizz/gitops-core-infra
         revision: HEAD
         directories:
-          - path: gitops-core-infra/environments/*
+          - path: environments/*
   template:
     metadata:
       name: "{{.path.basename}}-bootstrap"
