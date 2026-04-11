@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+spec:
+  description: "Crossplane platform components — providers, XRDs, compositions"
+  sourceRepos:
+    - "https://github.com/jeitto/gitops-core-infra.git"
+  destinations:
+    - namespace: crossplane-system
+      server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: pkg.crossplane.io
+      kind: Provider
+    - group: pkg.crossplane.io
+      kind: Function
+    - group: apiextensions.crossplane.io
+      kind: CompositeResourceDefinition
+    - group: apiextensions.crossplane.io
+      kind: Composition
+    - group: "gcp.m.upbound.io"
+      kind: ProviderConfig
+    - group: ""
+      kind: Namespace
+    # XRDs geram CRDs cluster-scoped (XBucket, XPubSub, etc.)
+    - group: "jeitto.io"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  orphanedResources:
+    warn: true

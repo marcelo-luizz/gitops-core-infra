@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: core-infra
+  namespace: argocd
+spec:
+  description: "Core infrastructure Claims — VPCs, Clusters, Databases"
+  sourceRepos:
+    - "https://github.com/jeitto/gitops-core-infra.git"
+  destinations:
+    - namespace: crossplane-system
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    # Claims do Crossplane (gerados pelos XRDs)
+    - group: "jeitto.io"
+      kind: "*"
+    # Managed Resources que o Crossplane cria
+    - group: "*.gcp.m.upbound.io"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "jeitto.io"
+      kind: "*"
+  orphanedResources:
+    warn: true
+  # Sync window: prod só em horário comercial
+  syncWindows:
+    - kind: allow
+      schedule: "0 8 * * 1-5"
+      duration: 12h
+      applications:
+        - "core-prod"
+      manualSync: true

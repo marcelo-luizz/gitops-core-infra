@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: titlis-integration
+  namespace: sistemas
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+  finalizers:
+  - resources-finalizer.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: 'https://github.com/jeitto/service-sre-titlis-operator-two.git'
+      targetRevision: release
+      path: charts/titlis-castai-monitor
+      helm:
+        valueFiles:
+          - $values/cluster-bootstrap/integration/applications/tools/titlis/values/values.yaml
+    - repoURL: 'https://gitlab-new.jeitto.com.br/devops/jeitto-iac/gitops-infra.git'
+      targetRevision: master
+      ref: values
+  destination:
+    namespace: titlis
+    name: cluster-integration
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

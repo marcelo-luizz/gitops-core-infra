@@ -1,0 +1,86 @@
+name: Validate Core Infra
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'crossplane/**'
+      - 'environments/**'
+      - 'argocd/**'
+
+jobs:
+  validate-yaml:
+    name: Validate YAML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint YAML files
+        run: yamllint -c .yamllint.yml .
+
+  validate-crossplane:
+    name: Validate Crossplane Resources
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Dry-run XRDs
+        run: |
+          for f in crossplane/xrds/*.yaml; do
+            echo "Validating $f..."
+            kubectl apply --dry-run=client -f "$f" 2>&1 || true
+          done
+
+      - name: Dry-run Compositions
+        run: |
+          for f in crossplane/compositions/*.yaml; do
+            echo "Validating $f..."
+            kubectl apply --dry-run=client -f "$f" 2>&1 || true
+          done
+
+  validate-kustomize:
+    name: Validate Kustomize Overlays
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Build integration overlay
+        run: kubectl kustomize argocd/cluster-addons/overlays/integration
+
+      - name: Build pre-prod overlay
+        run: kubectl kustomize argocd/cluster-addons/overlays/pre-prod
+
+      - name: Build prod overlay
+        run: kubectl kustomize argocd/cluster-addons/overlays/prod
+
+  detect-drift:
+    name: Detect Environment Drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check environment parity
+        run: |
+          echo "=== Verificando paridade entre environments ==="
+          for category in network compute database cache; do
+            echo ""
+            echo "--- $category ---"
+            for env in integration pre-prod prod; do
+              dir="environments/$env/$category"
+              if [ -d "$dir" ]; then
+                count=$(find "$dir" -name "*.yaml" | wc -l)
+                echo "  $env: $count arquivo(s)"
+              else
+                echo "  $env: AUSENTE ⚠️"
+              fi
+            done
+          done

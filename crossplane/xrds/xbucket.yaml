@@ -1,0 +1,67 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xbuckets.jeitto.io
+spec:
+  group: jeitto.io
+  names:
+    kind: XBucket
+    plural: xbuckets
+  claimNames:
+    kind: BucketClaim
+    plural: bucketclaims
+  defaultCompositionRef:
+    name: bucket-standard
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  required:
+                    - environment
+                    - team
+                  properties:
+                    environment:
+                      type: string
+                      description: "Target environment"
+                      enum:
+                        - integration
+                        - pre-prod
+                        - prod
+                    team:
+                      type: string
+                      description: "Team that owns this resource"
+                    storageClass:
+                      type: string
+                      description: "GCS storage class"
+                      enum:
+                        - STANDARD
+                        - NEARLINE
+                        - COLDLINE
+                        - ARCHIVE
+                      default: STANDARD
+                    location:
+                      type: string
+                      description: "GCP region"
+                      default: southamerica-east1
+                    retentionDays:
+                      type: integer
+                      description: "Data retention in days (0 = no retention policy)"
+                      default: 0
+                      minimum: 0
+                      maximum: 3650
+            status:
+              type: object
+              properties:
+                bucketName:
+                  type: string
+                bucketUrl:
+                  type: string

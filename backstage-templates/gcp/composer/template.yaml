@@ -1,0 +1,67 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: cloudsql-v1
+  title: Create CloudSQL via Crossplane-v1
+  description: Gera um manifesto Crossplane e abre um PR no repositório de GitOps.
+spec:
+  owner: team-platform
+  type: service
+
+  parameters:
+    - title: Dados da Máquina
+      required:
+        - instanceName
+        - environment
+      properties:
+        instanceName:
+          title: Instance Name
+          type: string
+          description: Nome único da instância CloudSQL.
+        environment:
+          title: Environment
+          type: string
+          enum:
+            - dev
+            - homolog
+            - prod
+          default: dev
+        team:
+          title: Team
+          type: string
+          enum: [team-a, team-b, team-c]
+
+  steps:
+    # 1. Busca a PASTA de templates. 
+    # Ele vai processar todos os arquivos lá dentro (incluindo o que renomeamos para {{name}}.yaml)
+    - id: fetch-template
+      name: Fetch Crossplane Template
+      action: fetch:template
+      input:
+        # Apontamos para a PASTA, não para o arquivo direto.
+        # O Backstage assume que o caminho é relativo ao local deste template.
+        url: ./skeleton
+        values:
+          name: ${{ parameters.instanceName }}
+          environment: ${{ parameters.environment }}
+          team: ${{ parameters.team }}
+        targetPath: ./infra-temp
+
+    # 2. Abre o Pull Request
+    - id: create-pr
+      name: Create Pull Request
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?repo=gitops-app-infra&owner=marcelo-luizz
+        branchName: create-instance-${{ parameters.instanceName }}
+        title: "feat(cloudsql): add instance ${{ parameters.instanceName }} in ${{ parameters.environment }}"
+        description: "Este PR foi gerado via Backstage."
+        # Pegamos o arquivo renderizado na pasta temporária
+        sourcePath: ./infra-temp
+        # E jogamos para a pasta de destino final no GitOps
+        targetPath: environments/${{ parameters.environment }}/compute/cloudsql/
+
+  output:
+    links:
+      - title: Acompanhar Pull Request
+        url: ${{ steps['create-pr'].output.remoteUrl }}

@@ -1,0 +1,68 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xpubsubs.jeitto.io
+spec:
+  group: jeitto.io
+  names:
+    kind: XPubSub
+    plural: xpubsubs
+  claimNames:
+    kind: PubSubClaim
+    plural: pubsubclaims
+  defaultCompositionRef:
+    name: pubsub-standard
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  required:
+                    - environment
+                    - team
+                  properties:
+                    environment:
+                      type: string
+                      enum:
+                        - integration
+                        - pre-prod
+                        - prod
+                    team:
+                      type: string
+                    ackDeadlineSeconds:
+                      type: integer
+                      description: "Acknowledgment deadline in seconds"
+                      default: 20
+                      minimum: 10
+                      maximum: 600
+                    messageRetentionDuration:
+                      type: string
+                      description: "Message retention duration"
+                      default: "604800s"
+                    enableDeadLetterQueue:
+                      type: boolean
+                      description: "Create a DLQ topic automatically"
+                      default: true
+                    maxDeliveryAttempts:
+                      type: integer
+                      description: "Max delivery attempts before DLQ"
+                      default: 5
+                      minimum: 5
+                      maximum: 100
+            status:
+              type: object
+              properties:
+                topicName:
+                  type: string
+                subscriptionName:
+                  type: string
+                dlqTopicName:
+                  type: string

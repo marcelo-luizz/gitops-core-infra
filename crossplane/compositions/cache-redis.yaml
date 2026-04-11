@@ -1,0 +1,70 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: cache-redis
+  labels:
+    provider: gcp
+    service: redis
+    crossplane.io/xrd: xcaches.jeitto.io
+spec:
+  compositeTypeRef:
+    apiVersion: jeitto.io/v1alpha1
+    kind: XCache
+  resources:
+    - name: redis-instance
+      base:
+        apiVersion: redis.gcp.upbound.io/v1beta2
+        kind: Instance
+        spec:
+          forProvider:
+            region: southamerica-east1
+            tier: BASIC
+            memorySizeGb: 1
+            redisVersion: REDIS_7_0
+            authEnabled: true
+            transitEncryptionMode: SERVER_AUTHENTICATION
+            connectMode: PRIVATE_SERVICE_ACCESS
+            maintenancePolicy:
+              - weeklyMaintenanceWindow:
+                  - day: SUNDAY
+                    startTime:
+                      - hours: 4
+                        minutes: 0
+            labels:
+              managed-by: crossplane
+          providerConfigRef:
+            name: gcp-integration
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.memorySizeGb
+          toFieldPath: spec.forProvider.memorySizeGb
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.redisVersion
+          toFieldPath: spec.forProvider.redisVersion
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.tier
+          toFieldPath: spec.forProvider.tier
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.team
+          toFieldPath: spec.forProvider.labels.team
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.forProvider.labels.environment
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.providerConfigRef.name
+          transforms:
+            - type: map
+              map:
+                integration: gcp-integration
+                pre-prod: gcp-pre-prod
+                prod: gcp-prod
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.host
+          toFieldPath: status.host
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.port
+          toFieldPath: status.port

@@ -1,32 +1,40 @@
+# =============================================================================
+# ApplicationSet: core-environments
+# Gera 1 Application por pasta em environments/ (integration, pre-prod, prod)
+# Cada Application aplica todos os Claims de core infrastructure daquele env
+# =============================================================================
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: core-infra-environments
+  name: core-environments
   namespace: argocd
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
     - git:
-        repoURL: https://github.com/marcelo-luizz/gitops-core-infra
+        repoURL: "https://github.com/jeitto/gitops-core-infra.git"
         revision: HEAD
         directories:
-          - path: environments/*
+          - path: "environments/*"
   template:
     metadata:
-      name: "core-infra-{{.path.basename}}-bootstrap"
+      name: "core-{{.path.basename}}"
       namespace: argocd
+      labels:
+        repo: core-infra
+        environment: "{{.path.basename}}"
       finalizers:
         - resources-finalizer.argocd.argoproj.io
     spec:
-      project: default
+      project: core-infra
       source:
-        repoURL: https://github.com/marcelo-luizz/gitops-core-infra
+        repoURL: "https://github.com/jeitto/gitops-core-infra.git"
         targetRevision: HEAD
         path: "{{.path.path}}"
         directory:
           recurse: true
-          include: "{**/*.yaml,**/*.yml}"
+          include: "*.yaml"
       destination:
         server: https://kubernetes.default.svc
         namespace: crossplane-system
@@ -34,3 +42,11 @@ spec:
         automated:
           prune: true
           selfHeal: true
+        syncOptions:
+          - ServerSideApply=true
+        retry:
+          limit: 3
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 1m

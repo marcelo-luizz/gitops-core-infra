@@ -1,0 +1,28 @@
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: gitops-core-infra
+  description: |
+    gitops-core-infra
+  annotations:
+    github.com/project-slug: jeitto/gitops-core-infra
+    backstage.io/techdocs-ref: dir:../
+    # backstage.io/kubernetes-label-selector: 'app=gitops-core-infra'
+    # argocd/app-selector: gitops-core-infra
+  # links:
+  #   - url: https://github.com/jeitto/
+  #     title: Repository
+  #     icon: github
+  #   - url: https://us5.datadoghq.com/apm/home
+  #     title: Monitoring
+  #     icon: dashboard
+  #   - url: https://console.cloud.google.com/logs
+  #     title: Logs
+  #     icon: logging       
+spec:
+  type: gitops
+  lifecycle: production
+  owner: platform-engineering
+  providesApis: []
+  consumesApis: []

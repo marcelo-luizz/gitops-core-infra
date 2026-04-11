@@ -1,0 +1,122 @@
+targetSystem: "linux"
+
+datadog:
+  apiKeyExistingSecret: datadog-secret
+  apiKey: "api-key"
+  clusterName: cluster-integration
+  site: us5.datadoghq.com
+  logLevel: INFO
+
+  # Isso garante que o Agent saiba ler as tags dos Pods
+  clusterChecks:
+    enabled: true
+  # Isso habilita o recebimento de métricas de runtime via DogStatsD
+  dogstatsd:
+    useHostPort: true
+    nonLocalTraffic: true
+
+  logs:
+    enabled: true
+    containerCollectAll: true
+    containerCollectUsingFiles: true
+
+  apm:
+    portEnabled: true
+
+  processAgent:
+    processCollection: true
+    containerCollection: true
+
+  networkMonitoring:
+    enabled: false
+
+  profiling:
+    enabled: auto
+
+  env:
+    - name: DD_LOGS_CONFIG_PROCESSING_RULES
+      value: '[{"type": "include_at_match", "name": "include_json", "pattern" : ".*(severity|level).*(ERROR|WARN|CRITICAL).*"}]'
+    - name: DD_TRACE_AGENT_URL
+      value: "http://datadog-agent.default.svc.cluster.local:8126"
+    - name: DD_DBM_ENABLED
+      value: "true"
+    - name: DD_RUNTIME_METRICS
+      value: "true"
+    - name: DD_PROFILING_ENABLED
+      value: "true"
+    - name: DD_DYNAMIC_INSTRUMENTATION_ENABLED
+      value: "true"
+    - name: DD_EXCEPTION_REPLAY_ENABLED
+      value: "true"
+    - name: DD_LOGS_INJECTION
+      value: "true"
+    - name: DD_APM_IGNORE_RESOURCES
+      value: "(?i)^(GET|POST) .*/health.*"   
+
+  containerExclude: "image:datadog/* image:gke.gcr.io/secret_manager_csi/* image:grafana/* kube_namespace:datadog kube_namespace:poc-datadog kube_namespace:external-secrets kube_namespace:kube-system kube_namespace:castai-agent kube_namespace:newrelic kube_namespace:gke-managed-system kube_namespace:gke-managed-volumepopulator kube_namespace:istio-system kube_namespace:unleash kube_namespace:secret-manager kube_namespace:kube-public kube_namespace:kube-node-lease"
+
+clusterAgent:
+  image:
+    tag: 7.71.0
+  priorityClassCreate: false
+  priorityClassName: datadog-agent-priority
+
+  # Agendamento específico (CAST AI - Pre Prod)
+  nodeSelector:
+    scheduling.cast.ai/node-template: "castai-node-pool-datadog"
+  
+  tolerations:
+    - key: "nodepool"
+      value: "datadog-integration"
+      effect: "NoSchedule"
+
+  # [SRE] TODO: Definir resources
+  # resources:
+  #   requests:
+  #     cpu: 200m
+  #     memory: 256Mi
+  #   limits:
+  #     cpu: 500m
+  #     memory: 512Mi
+
+  # Integração Bancos de Dados
+  # confd:
+
+# Feature ativada especificamente neste ambiente
+clusterChecksRunner:
+  enabled: false
+
+agents:
+  image:
+    tag: 7.71.0
+
+  priorityClassCreate: true
+  priorityClassName: datadog-agent-priority
+  priorityClassValue: 1000000000 # 1 Bilhão (Alta)
+
+  # Agendamento específico (CAST AI - Pre Prod)
+  nodeSelector:
+    scheduling.cast.ai/node-template: "castai-node-pool-datadog"
+
+  tolerations:
+    - key: "nodepool"
+      value: "datadog-integration"
+      effect: "NoSchedule"
+
+  # [SRE] TODO: Definir resources
+  # resources:
+  #   requests:
+  #     cpu: 200m
+  #     memory: 256Mi
+  #   limits:
+  #     cpu: 500m
+  #     memory: 512Mi
+
+  lifecycle:
+    preStop:
+      exec:
+        command: ["/bin/sh", "-c", "sleep 30"]
+
+providers:
+  gke:
+    cos: true

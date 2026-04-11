@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: castai-kvisor-integration
+  namespace: sistemas
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'  
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://castai.github.io/helm-charts
+    chart: castai-kvisor
+    targetRevision: '1.0.108'
+    helm:
+      parameters:
+        - name: castai.apiKeySecretRef
+          value: 'castai-api-key-secret'
+        - name: castai.clusterID
+          value: '5757f36e-b19c-437b-8711-fe6316eca14c'
+  destination:
+    name: cluster-integration
+    namespace: castai-agent
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

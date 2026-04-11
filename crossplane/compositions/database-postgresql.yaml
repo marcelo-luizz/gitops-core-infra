@@ -1,0 +1,117 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: database-postgresql
+  labels:
+    provider: gcp
+    service: sql
+    engine: postgresql
+    crossplane.io/xrd: xdatabases.jeitto.io
+spec:
+  compositeTypeRef:
+    apiVersion: jeitto.io/v1alpha1
+    kind: XDatabase
+  resources:
+    - name: sql-instance
+      base:
+        apiVersion: sql.gcp.upbound.io/v1beta2
+        kind: DatabaseInstance
+        spec:
+          forProvider:
+            databaseVersion: POSTGRES_15
+            region: southamerica-east1
+            deletionProtection: true
+            settings:
+              - tier: db-custom-2-7680
+                diskSize: 20
+                diskType: PD_SSD
+                diskAutoresize: true
+                diskAutoresizeLimit: 100
+                availabilityType: ZONAL
+                ipConfiguration:
+                  - ipv4Enabled: false
+                    privateNetworkRef:
+                      name: ""
+                backupConfiguration:
+                  - enabled: true
+                    startTime: "03:00"
+                    pointInTimeRecoveryEnabled: true
+                    transactionLogRetentionDays: 7
+                    backupRetentionSettings:
+                      - retainedBackups: 30
+                        retentionUnit: COUNT
+                maintenanceWindow:
+                  - day: 7
+                    hour: 4
+                    updateTrack: stable
+                insightsConfig:
+                  - queryInsightsEnabled: true
+                    queryStringLength: 1024
+                    recordApplicationTags: true
+                    recordClientAddress: true
+                databaseFlags:
+                  - name: log_checkpoints
+                    value: "on"
+                  - name: log_connections
+                    value: "on"
+                  - name: log_disconnections
+                    value: "on"
+                userLabels:
+                  managed-by: crossplane
+          providerConfigRef:
+            name: gcp-integration
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.engine
+          toFieldPath: spec.forProvider.databaseVersion
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.tier
+          toFieldPath: spec.forProvider.settings[0].tier
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.diskSizeGb
+          toFieldPath: spec.forProvider.settings[0].diskSize
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.highAvailability
+          toFieldPath: spec.forProvider.settings[0].availabilityType
+          transforms:
+            - type: map
+              map:
+                "true": REGIONAL
+                "false": ZONAL
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.enableBackups
+          toFieldPath: spec.forProvider.settings[0].backupConfiguration[0].enabled
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.team
+          toFieldPath: spec.forProvider.settings[0].userLabels.team
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.forProvider.settings[0].userLabels.environment
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.providerConfigRef.name
+          transforms:
+            - type: map
+              map:
+                integration: gcp-integration
+                pre-prod: gcp-pre-prod
+                prod: gcp-prod
+        # Desabilitar deletion protection em non-prod
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.forProvider.deletionProtection
+          transforms:
+            - type: map
+              map:
+                integration: false
+                pre-prod: false
+                prod: true
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.connectionName
+          toFieldPath: status.connectionName
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.privateIpAddress
+          toFieldPath: status.privateIpAddress

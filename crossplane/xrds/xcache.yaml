@@ -1,0 +1,68 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xcaches.jeitto.io
+spec:
+  group: jeitto.io
+  names:
+    kind: XCache
+    plural: xcaches
+  claimNames:
+    kind: CacheClaim
+    plural: cacheclaims
+  defaultCompositionRef:
+    name: cache-redis
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  required:
+                    - environment
+                    - team
+                  properties:
+                    environment:
+                      type: string
+                      enum:
+                        - integration
+                        - pre-prod
+                        - prod
+                    team:
+                      type: string
+                    memorySizeGb:
+                      type: integer
+                      description: "Redis memory size in GB"
+                      default: 1
+                      minimum: 1
+                      maximum: 300
+                    redisVersion:
+                      type: string
+                      default: REDIS_7_0
+                      enum:
+                        - REDIS_6_X
+                        - REDIS_7_0
+                    tier:
+                      type: string
+                      description: "BASIC (no replication) or STANDARD_HA (with replication)"
+                      default: BASIC
+                      enum:
+                        - BASIC
+                        - STANDARD_HA
+                    region:
+                      type: string
+                      default: southamerica-east1
+            status:
+              type: object
+              properties:
+                host:
+                  type: string
+                port:
+                  type: integer

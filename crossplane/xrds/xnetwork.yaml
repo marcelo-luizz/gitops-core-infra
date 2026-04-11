@@ -1,0 +1,65 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xnetworks.jeitto.io
+spec:
+  group: jeitto.io
+  names:
+    kind: XNetwork
+    plural: xnetworks
+  claimNames:
+    kind: NetworkClaim
+    plural: networkclaims
+  defaultCompositionRef:
+    name: network-standard
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  required:
+                    - environment
+                    - region
+                  properties:
+                    environment:
+                      type: string
+                      enum:
+                        - integration
+                        - pre-prod
+                        - prod
+                    region:
+                      type: string
+                      default: southamerica-east1
+                    vpcCidr:
+                      type: string
+                      description: "Primary CIDR for the VPC subnet"
+                      default: "10.0.0.0/20"
+                    podsCidr:
+                      type: string
+                      description: "Secondary CIDR for GKE pods"
+                      default: "10.4.0.0/14"
+                    servicesCidr:
+                      type: string
+                      description: "Secondary CIDR for GKE services"
+                      default: "10.8.0.0/20"
+                    enableNat:
+                      type: boolean
+                      description: "Enable Cloud NAT for outbound traffic"
+                      default: true
+            status:
+              type: object
+              properties:
+                vpcName:
+                  type: string
+                subnetName:
+                  type: string
+                natName:
+                  type: string

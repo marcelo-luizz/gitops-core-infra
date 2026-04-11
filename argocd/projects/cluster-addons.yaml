@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: cluster-addons
+  namespace: argocd
+spec:
+  description: "Kubernetes cluster addons — gateways, external-secrets, monitoring"
+  sourceRepos:
+    - "https://github.com/jeitto/gitops-core-infra.git"
+    - "https://charts.external-secrets.io"
+    - "https://istio-release.storage.googleapis.com/charts"
+    - "https://helm.datadoghq.com"
+  destinations:
+    - namespace: gateway
+      server: https://kubernetes.default.svc
+    - namespace: external-secrets
+      server: https://kubernetes.default.svc
+    - namespace: monitoring
+      server: https://kubernetes.default.svc
+    - namespace: istio-system
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: networking.k8s.io
+      kind: IngressClass
+    - group: external-secrets.io
+      kind: ClusterSecretStore
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  orphanedResources:
+    warn: true

@@ -6,8 +6,6 @@ metadata:
 spec:
   projectID: devops-labs-397603 
   credentials:
-    source: Secret
-    secretRef:
-      namespace: crossplane-system
-      name: gcp-credentials
-      key: key.json
+    impersonateServiceAccount:
+      name: my-default@my-project.iam.gserviceaccount.com
+    source: ImpersonateServiceAccount

@@ -1,0 +1,24 @@
+# =============================================================================
+# CODEOWNERS — gitops-core-infra
+# =============================================================================
+# Cada PR precisa de aprovação dos owners listados.
+# Referência: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# --- Default: time de plataforma aprova tudo ---
+*                                     @jeitto/platform-team
+
+# --- Crossplane (XRDs, Compositions, Providers) ---
+/crossplane/                          @jeitto/platform-team
+
+# --- ArgoCD (Projects, ApplicationSets, Addons) ---
+/argocd/                              @jeitto/platform-team
+
+# --- Environments ---
+# Integração: qualquer membro de plataforma
+/environments/integration/            @jeitto/platform-team
+
+# Pre-prod: pelo menos 1 aprovação de plataforma
+/environments/pre-prod/               @jeitto/platform-team
+
+# Produção: exige 2 aprovações (configurar via branch protection rules)
+/environments/prod/                   @jeitto/platform-team @jeitto/platform-leads

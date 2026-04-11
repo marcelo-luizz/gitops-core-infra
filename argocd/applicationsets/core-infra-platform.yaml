@@ -1,7 +1,12 @@
+# =============================================================================
+# ApplicationSet: crossplane-platform
+# Gerencia os componentes do Crossplane (providers, configs, XRDs, compositions)
+# Usa list generator para controle granular de namespace/scope por componente
+# =============================================================================
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: core-infra-platform
+  name: crossplane-platform
   namespace: argocd
 spec:
   goTemplate: true
@@ -11,18 +16,17 @@ spec:
         elements:
           - name: argocd-projects
             path: argocd/projects
-            namespace: argocd
           # - name: crossplane-providers
-          #   path: gitops-core-infra/crossplane/providers
+          #   path: crossplane/providers
           #   namespace: crossplane-system
-          # - name: crossplane-provider-config
-          #   path: gitops-core-infra/crossplane/provider-config
+          # - name: crossplane-provider-configs
+          #   path: crossplane/provider-configs
           #   namespace: crossplane-system
           # - name: crossplane-xrds
-          #   path: gitops-core-infra/crossplane/composite-resource-definition
+          #   path: crossplane/xrds
           #   namespace: crossplane-system
           # - name: crossplane-compositions
-          #   path: gitops-core-infra/crossplane/composition
+          #   path: crossplane/compositions
           #   namespace: crossplane-system
   template:
     metadata:
@@ -31,9 +35,9 @@ spec:
       finalizers:
         - resources-finalizer.argocd.argoproj.io
     spec:
-      project: default
+      project: platform
       source:
-        repoURL: https://github.com/marcelo-luizz/gitops-core-infra
+        repoURL: "https://github.com/jeitto/gitops-core-infra.git"
         targetRevision: HEAD
         path: "{{.path}}"
         directory:
@@ -46,3 +50,12 @@ spec:
         automated:
           prune: true
           selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m

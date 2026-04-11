@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./applications/gateway/external-gateway/external-gateway.yaml
+  - ./applications/gateway/internal-gateway/internal-gateway.yaml
+  - ./applications/tools/external-secrets/external-secrets.yaml
+  - ./applications/tools/external-secrets/cluster-secret-store/cluster-secret-store.yaml
+  # - ./applications/tools/datadog/datadog.yaml
+  # - ./applications/tools/datadog/datadog-secret/datadog.yaml
+  - ./applications/tools/titlis/titlis.yaml
+  - ./applications/tools/titlis/titlis-secret/titlis.yaml
+  # - ./applications/tools/cast-ai/cast-ai-agent/cast-ai-base/cast-ai.yaml
+  # - ./applications/tools/cast-ai/cast-ai-agent/cast-ai-agent.yaml
+  # - ./applications/tools/cast-ai/cast-ai-cluster-controller/cast-ai-cluster-controller.yaml
+  # - ./applications/tools/cast-ai/cast-ai-evictor/cast-ai-evictor.yaml
+  # - ./applications/tools/cast-ai/cast-ai-kvisor/cast-ai-kvisor.yaml
+  # - ./applications/tools/cast-ai/cast-ai-spot-handler/cast-ai-spot-handler.yaml
+  # - ./applications/tools/cast-ai/cast-ai-workload-autoscaler/cast-ai-workload-autoscaler.yaml

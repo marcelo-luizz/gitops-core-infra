@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: castai-agent-integration
+  namespace: sistemas
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://castai.github.io/helm-charts
+    chart: castai-agent
+    targetRevision: '0.124.0'
+    helm:
+      parameters:
+        # Parâmetros existentes
+        - name: apiKeySecretRef
+          value: 'castai-api-key-secret'
+        - name: provider
+          value: 'gke'
+      # values: |
+      #   nodeSelector:
+      #     "autoscaling.cast.ai/removal-disabled": "true"
+      #     "scheduling.cast.ai/node-template": "castai-node-pool-integration"
+      #   tolerations:
+      #   - key: nodepool
+      #     operator: Equal
+      #     value: castai-node-pool-integration
+      #     effect: NoSchedule
+  destination:
+    name: cluster-integration
+    namespace: castai-agent
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

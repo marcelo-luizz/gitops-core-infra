@@ -1,0 +1,42 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+patches:
+  - target:
+      kind: Application
+      name: external-secrets
+    patch: |-
+      - op: replace
+        path: /spec/destination/name
+        value: cluster-pre-prod
+      - op: replace
+        path: /metadata/name
+        value: external-secrets-pre-prod
+  - target:
+      kind: Application
+      name: external-gateway
+    patch: |-
+      - op: replace
+        path: /spec/destination/name
+        value: cluster-pre-prod
+      - op: replace
+        path: /metadata/name
+        value: external-gateway-pre-prod
+  - target:
+      kind: Application
+      name: internal-gateway
+    patch: |-
+      - op: replace
+        path: /spec/destination/name
+        value: cluster-pre-prod
+      - op: replace
+        path: /metadata/name
+        value: internal-gateway-pre-prod
+  - target:
+      kind: ClusterSecretStore
+      name: gcp-secret-manager
+    patch: |-
+      - op: replace
+        path: /spec/provider/gcpsm/projectID
+        value: jeitto-pre-prod

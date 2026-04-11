@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: internal-gateway-integration
+  namespace: sistemas
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  project: default 
+  sources: 
+    - repoURL: 'https://gitlab-new.jeitto.com.br/devops/jeitto-iac/gitops-infra.git'
+      targetRevision: master
+      path: cluster-bootstrap/integration/applications/gateway/internal-gateway/internal-gateway-integration
+  destination:
+    name: cluster-integration
+    namespace: gateway-internal
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

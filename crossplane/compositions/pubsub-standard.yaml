@@ -1,0 +1,152 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: pubsub-standard
+  labels:
+    provider: gcp
+    service: pubsub
+    crossplane.io/xrd: xpubsubs.jeitto.io
+spec:
+  compositeTypeRef:
+    apiVersion: jeitto.io/v1alpha1
+    kind: XPubSub
+  resources:
+    # =====================
+    # 1. TÓPICO PRINCIPAL
+    # =====================
+    - name: topic
+      base:
+        apiVersion: pubsub.gcp.upbound.io/v1beta2
+        kind: Topic
+        spec:
+          forProvider:
+            messageStoragePolicy:
+              - allowedPersistenceRegions:
+                  - southamerica-east1
+            labels:
+              managed-by: crossplane
+          providerConfigRef:
+            name: gcp-integration
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.team
+          toFieldPath: spec.forProvider.labels.team
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.forProvider.labels.environment
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.providerConfigRef.name
+          transforms:
+            - type: map
+              map:
+                integration: gcp-integration
+                pre-prod: gcp-pre-prod
+                prod: gcp-prod
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          toFieldPath: status.topicName
+
+    # =====================
+    # 2. TÓPICO DLQ
+    # =====================
+    - name: dlq-topic
+      base:
+        apiVersion: pubsub.gcp.upbound.io/v1beta2
+        kind: Topic
+        spec:
+          forProvider:
+            messageStoragePolicy:
+              - allowedPersistenceRegions:
+                  - southamerica-east1
+            labels:
+              managed-by: crossplane
+              type: dead-letter-queue
+          providerConfigRef:
+            name: gcp-integration
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-dlq"
+                type: Format
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.team
+          toFieldPath: spec.forProvider.labels.team
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.forProvider.labels.environment
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.providerConfigRef.name
+          transforms:
+            - type: map
+              map:
+                integration: gcp-integration
+                pre-prod: gcp-pre-prod
+                prod: gcp-prod
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          toFieldPath: status.dlqTopicName
+
+    # =====================
+    # 3. SUBSCRIPTION
+    # =====================
+    - name: subscription
+      base:
+        apiVersion: pubsub.gcp.upbound.io/v1beta2
+        kind: Subscription
+        spec:
+          forProvider:
+            ackDeadlineSeconds: 20
+            messageRetentionDuration: "604800s"
+            retainAckedMessages: false
+            expirationPolicy:
+              - ttl: ""
+            retryPolicy:
+              - minimumBackoff: "10s"
+                maximumBackoff: "600s"
+            topicSelector:
+              matchControllerRef: true
+              matchLabels:
+                crossplane.io/composite: ""
+            labels:
+              managed-by: crossplane
+          providerConfigRef:
+            name: gcp-integration
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-sub"
+                type: Format
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.ackDeadlineSeconds
+          toFieldPath: spec.forProvider.ackDeadlineSeconds
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.messageRetentionDuration
+          toFieldPath: spec.forProvider.messageRetentionDuration
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.team
+          toFieldPath: spec.forProvider.labels.team
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.forProvider.labels.environment
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.providerConfigRef.name
+          transforms:
+            - type: map
+              map:
+                integration: gcp-integration
+                pre-prod: gcp-pre-prod
+                prod: gcp-prod
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          toFieldPath: status.subscriptionName

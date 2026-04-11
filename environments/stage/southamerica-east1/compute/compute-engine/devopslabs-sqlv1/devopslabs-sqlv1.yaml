@@ -1,0 +1,17 @@
+apiVersion: compute.gcp.m.upbound.io/v1beta1
+kind: Instance
+metadata:
+  name: devopslabs-sqlv1
+  namespace: crossplane-system  
+spec:
+  forProvider:
+    bootDisk:
+      initializeParams:
+        image: debian-cloud/debian-11
+    machineType: e2-medium
+    networkInterface:
+      - network: default
+    zone: us-central1-a
+  providerConfigRef:
+    name: default
+    kind: ProviderConfig

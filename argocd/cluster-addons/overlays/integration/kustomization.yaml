@@ -1,0 +1,42 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+patches:
+  - target:
+      kind: Application
+      name: external-secrets
+    patch: |-
+      - op: replace
+        path: /spec/destination/name
+        value: cluster-integration
+      - op: replace
+        path: /metadata/name
+        value: external-secrets-integration
+  - target:
+      kind: Application
+      name: external-gateway
+    patch: |-
+      - op: replace
+        path: /spec/destination/name
+        value: cluster-integration
+      - op: replace
+        path: /metadata/name
+        value: external-gateway-integration
+  - target:
+      kind: Application
+      name: internal-gateway
+    patch: |-
+      - op: replace
+        path: /spec/destination/name
+        value: cluster-integration
+      - op: replace
+        path: /metadata/name
+        value: internal-gateway-integration
+  - target:
+      kind: ClusterSecretStore
+      name: gcp-secret-manager
+    patch: |-
+      - op: replace
+        path: /spec/provider/gcpsm/projectID
+        value: jeitto-integration

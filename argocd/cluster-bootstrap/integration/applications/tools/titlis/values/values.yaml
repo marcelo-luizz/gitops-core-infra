@@ -1,0 +1,74 @@
+replicaCount: 1
+
+image:
+  repository: gcr.io/jeitto-backend/sre-titlis-operator-one/main
+  tag: "2f1c19cf32a542ea715550d130577a28333b3088"
+  pullPolicy: IfNotPresent
+
+namespace: titlis
+
+# Operator behavior
+operator:
+  reconciliation:
+    intervalSeconds: 300
+    debounceSeconds: 30
+  leaderElection:
+    enabled: true
+    namespace: "titlis"
+
+# Kubernetes
+kubernetes:
+  namespace: "titlis"
+  serviceAccountName: "titlis-operator"
+
+# Logging
+logging:
+  level: "INFO"
+  format: "json"
+
+# Observability
+observability:
+  metricsEnabled: true
+  tracingEnabled: false
+
+# Todos os controllers desabilitados — apenas CAST AI Monitor ativo
+controllers:
+  scorecardEnabled: false
+  sloEnabled: false
+  autoRemediationEnabled: false
+
+# CAST AI Monitor — único módulo habilitado neste chart
+castai:
+  monitorEnabled: true
+  monitorNamespace: "castai-agent"
+  monitorIntervalSeconds: 60
+  clusterName: "cluster-integration"
+  # Secret: titlis-castai-keys deve ter as chaves api-key e cluster-id
+  costCacheTtlSeconds: 300
+  costEnrichmentEnabled: false
+
+# Datadog — necessário para envio de métricas do CAST AI
+datadog:
+  site: "us5.datadoghq.com"
+  secretName: "titlis-datadog-keys"
+
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "250m"
+    memory: "256Mi"
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+serviceAccount:
+  create: true
+  annotations: {}
+
+rbac:
+  create: true

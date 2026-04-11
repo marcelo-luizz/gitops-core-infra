@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: castai-evictor-integration
+  namespace: sistemas
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'  
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://castai.github.io/helm-charts
+    chart: castai-evictor
+    targetRevision: '0.33.103'
+    helm:
+      parameters:
+        - name: apiKeySecretRef
+          value: 'castai-api-key-secret'
+  destination:
+    name: cluster-integration
+    namespace: castai-agent
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

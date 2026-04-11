@@ -1,0 +1,11 @@
+site_name: gitops-core-infra
+site_description: 'Main documentation for the gitops-core-infra'
+repo_url: https://github.com/jeitto/gitops-core-infra
+
+edit_uri: edit/main/docs
+
+plugins:
+  - techdocs-core
+nav:
+  - Overview:
+      - Getting started: 'index.md'

@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: gitops-core-infra
+  description: |
+    gitops-core-infra
+spec:
+  targets:
+    - catalog/*.yaml

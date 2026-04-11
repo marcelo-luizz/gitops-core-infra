@@ -1,0 +1,154 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: network-standard
+  labels:
+    provider: gcp
+    service: network
+    crossplane.io/xrd: xnetworks.jeitto.io
+spec:
+  compositeTypeRef:
+    apiVersion: jeitto.io/v1alpha1
+    kind: XNetwork
+  resources:
+    # =====================
+    # 1. VPC
+    # =====================
+    - name: vpc
+      base:
+        apiVersion: compute.gcp.upbound.io/v1beta1
+        kind: Network
+        spec:
+          forProvider:
+            autoCreateSubnetworks: false
+            routingMode: REGIONAL
+          providerConfigRef:
+            name: gcp-integration
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.providerConfigRef.name
+          transforms:
+            - type: map
+              map:
+                integration: gcp-integration
+                pre-prod: gcp-pre-prod
+                prod: gcp-prod
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          toFieldPath: status.vpcName
+
+    # =====================
+    # 2. SUBNET
+    # =====================
+    - name: subnet
+      base:
+        apiVersion: compute.gcp.upbound.io/v1beta1
+        kind: Subnetwork
+        spec:
+          forProvider:
+            ipCidrRange: "10.0.0.0/20"
+            region: southamerica-east1
+            networkSelector:
+              matchControllerRef: true
+            privateIpGoogleAccess: true
+            secondaryIpRange:
+              - ipCidrRange: "10.4.0.0/14"
+                rangeName: pods
+              - ipCidrRange: "10.8.0.0/20"
+                rangeName: services
+            logConfig:
+              - aggregationInterval: INTERVAL_5_SEC
+                flowSampling: 0.5
+                metadata: INCLUDE_ALL_METADATA
+          providerConfigRef:
+            name: gcp-integration
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.vpcCidr
+          toFieldPath: spec.forProvider.ipCidrRange
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.podsCidr
+          toFieldPath: spec.forProvider.secondaryIpRange[0].ipCidrRange
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.servicesCidr
+          toFieldPath: spec.forProvider.secondaryIpRange[1].ipCidrRange
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.providerConfigRef.name
+          transforms:
+            - type: map
+              map:
+                integration: gcp-integration
+                pre-prod: gcp-pre-prod
+                prod: gcp-prod
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          toFieldPath: status.subnetName
+
+    # =====================
+    # 3. ROUTER (para NAT)
+    # =====================
+    - name: router
+      base:
+        apiVersion: compute.gcp.upbound.io/v1beta1
+        kind: Router
+        spec:
+          forProvider:
+            region: southamerica-east1
+            networkSelector:
+              matchControllerRef: true
+          providerConfigRef:
+            name: gcp-integration
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.providerConfigRef.name
+          transforms:
+            - type: map
+              map:
+                integration: gcp-integration
+                pre-prod: gcp-pre-prod
+                prod: gcp-prod
+
+    # =====================
+    # 4. CLOUD NAT
+    # =====================
+    - name: nat
+      base:
+        apiVersion: compute.gcp.upbound.io/v1beta1
+        kind: RouterNAT
+        spec:
+          forProvider:
+            region: southamerica-east1
+            routerSelector:
+              matchControllerRef: true
+            natIpAllocateOption: AUTO_ONLY
+            sourceSubnetworkIpRangesToNat: ALL_SUBNETWORKS_ALL_IP_RANGES
+            logConfig:
+              - enable: true
+                filter: ERRORS_ONLY
+          providerConfigRef:
+            name: gcp-integration
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.region
+          toFieldPath: spec.forProvider.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.environment
+          toFieldPath: spec.providerConfigRef.name
+          transforms:
+            - type: map
+              map:
+                integration: gcp-integration
+                pre-prod: gcp-pre-prod
+                prod: gcp-prod
+        - type: ToCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          toFieldPath: status.natName
