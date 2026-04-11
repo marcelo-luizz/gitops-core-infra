@@ -156,8 +156,8 @@ spec:
         
         # CAMINHO CORRIGIDO AQUI:
         targetPath: >-
-          ${{ 'environments/' + parameters.environment + '/' + (parameters.team | parseEntityRef).name + '/compute/compute-engine/' + parameters.instanceName if parameters.scope == 'app-infra' 
-              else 'environments/' + parameters.environment + '/southamerica-east1/compute/compute-engine/' + parameters.instanceName }}
+          ${{ 'environments/' + parameters.environment + '/' + (parameters.team | parseEntityRef).name + '/compute-engine/' + parameters.instanceName if parameters.scope == 'app-infra' 
+              else 'environments/' + parameters.environment + '/southamerica-east1/compute-engine/' + parameters.instanceName }}
 
   output:
     links:
@@ -169,10 +169,10 @@ spec:
           Parabéns! O seu recurso foi solicitado.
 
           ### 🚀 Fluxo de Provisionamento
-          ![Fluxo GitOps](https://raw.githubusercontent.com/marcelo-luizz/gitops-core-infra/main/crossplane/templates/compute/compute-engine/gitops-app-infra.png)
+          ![Fluxo GitOps](https://raw.githubusercontent.com/marcelo-luizz/gitops-core-infra/main/backstage-templates/gcp/compute-engine/gitops-app-infra.png)
 
           ### 📂 Destino do Manifesto
           O arquivo foi enviado para o repositório **gitops-${{ parameters.scope }}**.
           
           **Caminho final:**
-          `environments/${{ parameters.environment }}/${{ (parameters.team | parseEntityRef).name if parameters.scope == 'app-infra' else 'southamerica-east1' }}/compute/compute-engine/${{ parameters.instanceName }}`
+          `environments/${{ parameters.environment }}/${{ (parameters.team | parseEntityRef).name if parameters.scope == 'app-infra' else 'southamerica-east1' }}/compute-engine/${{ parameters.instanceName }}`
