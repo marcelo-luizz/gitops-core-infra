@@ -1,18 +1,17 @@
-apiVersion: sql.gcp.m.upbound.io/v1beta1
-kind: DatabaseInstance
+apiVersion: compute.gcp.m.upbound.io/v1beta1
+kind: Instance
 metadata:
   name: ${{ values.name }}
-  namespace: crossplane-system
+  namespace: crossplane-system  
 spec:
   forProvider:
-    databaseVersion: MYSQL_5_7
-    deletionProtection: false
-    region: us-central1
-    settings:
-      diskSize: 20
-      tier: db-f1-micro
+    bootDisk:
+      initializeParams:
+        image: debian-cloud/debian-11
+    machineType: e2-medium
+    networkInterface:
+      - network: default
+    zone: us-central1-a
   providerConfigRef:
     name: default
     kind: ProviderConfig
-  writeConnectionSecretToRef:
-    name: ${{ values.name }}-sql-db-instance-secret
