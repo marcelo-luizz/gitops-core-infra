@@ -4,16 +4,33 @@ metadata:
   name: gcs-bucket
   title: Create GCS Bucket via Crossplane
   description: Gera um manifesto Crossplane e abre um PR no repositório de GitOps.
+  tags:
+    - gcp
+    - crossplane
+    - infrastructure
 spec:
   owner: team-platform
   type: service
-
   parameters:
     - title: Dados do Bucket
       required:
+        - scope
         - bucketname
         - environment
       properties:
+        scope:
+          title: Escopo de Implantação
+          type: string
+          ui:widget: radio
+          description: |
+            * **App Infra (Padrão):** Para recursos que servem diretamente sua aplicação (PubSub, Buckets). Uso geral para times de engenharia.
+            * **Core Infra:** Para componentes de base e fundação. Uso restrito ao time de Plataforma/SRE.
+          enum:
+            - app-infra
+            - core-infra
+          enumNames:
+            - "App Infra (Uso Geral para Times de Engenharia)"
+            - "Core Infra (Infraestrutura de Base/Plataforma)"
         bucketname:
           title: Bucket Name
           type: string
@@ -33,44 +50,68 @@ spec:
             - stage
             - homolog
             - prod
-          default: dev
+          default: stage
         team:
-          title: Team
+          title: Time Responsável
           type: string
-          enum: [team-a, team-b, team-c]
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
 
   steps:
-    # 1. Busca a PASTA de templates. 
-    # Ele vai processar todos os arquivos lá dentro (incluindo o que renomeamos para {{name}}.yaml)
     - id: fetch-template
       name: Fetch Crossplane Template
       action: fetch:template
       input:
-        # Apontamos para a PASTA, não para o arquivo direto.
-        # O Backstage assume que o caminho é relativo ao local deste template.
         url: ./skeleton
         values:
           name: ${{ parameters.bucketname }}
           region: ${{ parameters.region }}
           environment: ${{ parameters.environment }}
           team: ${{ parameters.team }}
+          scope: ${{ parameters.scope }}
         targetPath: ./infra-temp
 
-    # 2. Abre o Pull Request
     - id: create-pr
-      name: Create Pull Request
+      name: Criando Pull Request
       action: publish:github:pull-request
       input:
-        repoUrl: github.com?repo=gitops-app-infra&owner=marcelo-luizz
-        branchName: create-bucket-${{ parameters.bucketname }}
-        title: "feat(gcs): add bucket ${{ parameters.bucketname }} in ${{ parameters.environment }}"
-        description: "Este PR foi gerado via Backstage."
-        # Pegamos o arquivo renderizado na pasta temporária
+        repoUrl: >-
+          ${{ 'github.com?repo=gitops-app-infra&owner=marcelo-luizz' if parameters.scope == 'app-infra' 
+              else 'github.com?repo=gitops-core-infra&owner=marcelo-luizz' }}
+        
+        branchName: "infra-${{ parameters.scope }}-${{ parameters.bucketname }}"
+        title: "infra(${{ parameters.scope }}): add ${{ parameters.bucketname }} em ${{ parameters.environment }}"
+        description: |
+          ### 🚀 Novo Recurso de Infraestrutura
+          - **Tipo:** ${{ parameters.scope }}
+          - **Ambiente:** ${{ parameters.environment }}
+          - **Time:** ${{ (parameters.team | parseEntityRef).name }}
+          
+          Gerado automaticamente via Backstage IDP.
+        
         sourcePath: ./infra-temp
-        # E jogamos para a pasta de destino final no GitOps
-        targetPath: environments/${{ parameters.environment }}/teams/${{ parameters.team }}/${{ parameters.region }}/bucket/${{ parameters.bucketname }}/
+        
+        # CAMINHO CORRIGIDO AQUI:
+        targetPath: >-
+          ${{ 'environments/' + parameters.environment + '/teams/'  + (parameters.team | parseEntityRef).name + '/southamerica-east1/bucket/' + parameters.bucketname if parameters.scope == 'app-infra' 
+              else 'environments/' + parameters.environment + '/southamerica-east1/bucket/' + parameters.bucketname }}
 
   output:
     links:
-      - title: Acompanhar Pull Request
+      - title: "🔗 Acompanhar Pull Request no GitHub"
         url: ${{ steps['create-pr'].output.remoteUrl }}
+    text:
+      - title: "📘 Como funciona este provisionamento?"
+        content: |
+          Parabéns! O seu recurso foi solicitado.
+
+          ### 🚀 Fluxo de Provisionamento
+          ![Fluxo GitOps](https://raw.githubusercontent.com/marcelo-luizz/gitops-core-infra/main/backstage-templates/gcp/compute-engine/gitops-app-infra.png)
+
+          ### 📂 Destino do Manifesto
+          O arquivo foi enviado para o repositório **gitops-${{ parameters.scope }}**.
+          
+          **Caminho final:**
+          `environments/${{ parameters.environment }}/${{ (parameters.team | parseEntityRef).name if parameters.scope == 'app-infra' else 'southamerica-east1' }}/bucket/${{ parameters.bucketname }}`
