@@ -156,7 +156,7 @@ spec:
         
         # CAMINHO CORRIGIDO AQUI:
         targetPath: >-
-          ${{ 'environments/' + parameters.environment + '/teams/'  + (parameters.team | parseEntityRef).name + '/compute-engine/' + parameters.instanceName if parameters.scope == 'app-infra' 
+          ${{ 'environments/' + parameters.environment + '/teams/southamerica-east1/'  + (parameters.team | parseEntityRef).name + '/compute-engine/' + parameters.instanceName if parameters.scope == 'app-infra' 
               else 'environments/' + parameters.environment + '/southamerica-east1/compute-engine/' + parameters.instanceName }}
 
   output:
