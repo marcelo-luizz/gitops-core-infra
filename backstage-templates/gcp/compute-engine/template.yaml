@@ -1,67 +1,178 @@
+# apiVersion: scaffolder.backstage.io/v1beta3
+# kind: Template
+# metadata:
+#   name: cloudsql-v1
+#   title: Create CloudSQL via Crossplane-v1
+#   description: Gera um manifesto Crossplane e abre um PR no repositório de GitOps.
+# spec:
+#   owner: team-platform
+#   type: service
+
+#   parameters:
+#     - title: Dados da Máquina
+#       required:
+#         - instanceName
+#         - environment
+#       properties:
+#         instanceName:
+#           title: Instance Name
+#           type: string
+#           description: Nome único da instância CloudSQL.
+#         environment:
+#           title: Environment
+#           type: string
+#           enum:
+#             - dev
+#             - homolog
+#             - prod
+#           default: dev
+#         team:
+#           title: Team
+#           type: string
+#           enum: [team-a, team-b, team-c]
+
+#   steps:
+#     # 1. Busca a PASTA de templates. 
+#     # Ele vai processar todos os arquivos lá dentro (incluindo o que renomeamos para {{name}}.yaml)
+#     - id: fetch-template
+#       name: Fetch Crossplane Template
+#       action: fetch:template
+#       input:
+#         # Apontamos para a PASTA, não para o arquivo direto.
+#         # O Backstage assume que o caminho é relativo ao local deste template.
+#         url: ./skeleton
+#         values:
+#           name: ${{ parameters.instanceName }}
+#           environment: ${{ parameters.environment }}
+#           team: ${{ parameters.team }}
+#         targetPath: ./infra-temp
+
+#     # 2. Abre o Pull Request
+#     - id: create-pr
+#       name: Create Pull Request
+#       action: publish:github:pull-request
+#       input:
+#         repoUrl: github.com?repo=gitops-app-infra&owner=marcelo-luizz
+#         branchName: create-instance-${{ parameters.instanceName }}
+#         title: "feat(cloudsql): add instance ${{ parameters.instanceName }} in ${{ parameters.environment }}"
+#         description: "Este PR foi gerado via Backstage."
+#         # Pegamos o arquivo renderizado na pasta temporária
+#         sourcePath: ./infra-temp
+#         # E jogamos para a pasta de destino final no GitOps
+#         targetPath: environments/${{ parameters.environment }}/compute/cloudsql/
+
+#   output:
+#     links:
+#       - title: Acompanhar Pull Request
+#         url: ${{ steps['create-pr'].output.remoteUrl }}
+# ---
+
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: cloudsql-v1
-  title: Create CloudSQL via Crossplane-v1
-  description: Gera um manifesto Crossplane e abre um PR no repositório de GitOps.
+  name: compute-engine-v1
+  title: Provisionamento de Infraestrutura (Crossplane)
+  description: "Gera manifestos Crossplane Upbound e abre PR no repositório correto (App ou Core)."
+  tags:
+    - gcp
+    - crossplane
+    - infrastructure
 spec:
   owner: team-platform
   type: service
 
   parameters:
-    - title: Dados da Máquina
+    - title: Configurações da Instância
       required:
+        - scope
         - instanceName
         - environment
+        - team
       properties:
-        instanceName:
-          title: Instance Name
+        scope:
+          title: Escopo de Implantação
           type: string
-          description: Nome único da instância CloudSQL.
+          ui:widget: radio
+          description: |
+            * **App Infra (Padrão):** Para recursos que servem diretamente sua aplicação (PubSub, Buckets). Uso geral para times de engenharia.
+            * **Core Infra:** Para componentes de base e fundação. Uso restrito ao time de Plataforma/SRE.
+          enum:
+            - app-infra
+            - core-infra
+          enumNames:
+            - "App Infra (Uso Geral para Times de Engenharia)"
+            - "Core Infra (Infraestrutura de Base/Plataforma)"
+        instanceName:
+          title: Nome da Instância / Recurso
+          type: string
+          description: "Nome único (ex: my-service-topic ou my-vm-name)."
         environment:
-          title: Environment
+          title: Ambiente
           type: string
           enum:
-            - dev
+            - stage
             - homolog
-            - prod
-          default: dev
+          default: stage
         team:
-          title: Team
+          title: Time Responsável
           type: string
-          enum: [team-a, team-b, team-c]
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
 
   steps:
-    # 1. Busca a PASTA de templates. 
-    # Ele vai processar todos os arquivos lá dentro (incluindo o que renomeamos para {{name}}.yaml)
     - id: fetch-template
-      name: Fetch Crossplane Template
+      name: Renderizando Manifestos
       action: fetch:template
       input:
-        # Apontamos para a PASTA, não para o arquivo direto.
-        # O Backstage assume que o caminho é relativo ao local deste template.
         url: ./skeleton
         values:
           name: ${{ parameters.instanceName }}
           environment: ${{ parameters.environment }}
           team: ${{ parameters.team }}
+          scope: ${{ parameters.scope }}
         targetPath: ./infra-temp
 
-    # 2. Abre o Pull Request
     - id: create-pr
-      name: Create Pull Request
+      name: Criando Pull Request
       action: publish:github:pull-request
       input:
-        repoUrl: github.com?repo=gitops-app-infra&owner=marcelo-luizz
-        branchName: create-instance-${{ parameters.instanceName }}
-        title: "feat(cloudsql): add instance ${{ parameters.instanceName }} in ${{ parameters.environment }}"
-        description: "Este PR foi gerado via Backstage."
-        # Pegamos o arquivo renderizado na pasta temporária
+        repoUrl: >-
+          ${{ 'github.com?repo=gitops-app-infra&owner=marcelo-luizz' if parameters.scope == 'app-infra' 
+              else 'github.com?repo=gitops-core-infra&owner=marcelo-luizz' }}
+        
+        branchName: "infra-${{ parameters.scope }}-${{ parameters.instanceName }}"
+        title: "infra(${{ parameters.scope }}): add ${{ parameters.instanceName }} em ${{ parameters.environment }}"
+        description: |
+          ### 🚀 Novo Recurso de Infraestrutura
+          - **Tipo:** ${{ parameters.scope }}
+          - **Ambiente:** ${{ parameters.environment }}
+          - **Time:** ${{ (parameters.team | parseEntityRef).name }}
+          
+          Gerado automaticamente via Backstage IDP.
+        
         sourcePath: ./infra-temp
-        # E jogamos para a pasta de destino final no GitOps
-        targetPath: environments/${{ parameters.environment }}/compute/cloudsql/
+        
+        # CAMINHO CORRIGIDO AQUI:
+        targetPath: >-
+          ${{ 'environments/' + parameters.environment + '/' + (parameters.team | parseEntityRef).name + '/compute/compute-engine/' + parameters.instanceName if parameters.scope == 'app-infra' 
+              else 'environments/' + parameters.environment + '/southamerica-east1/compute/compute-engine/' + parameters.instanceName }}
 
   output:
     links:
-      - title: Acompanhar Pull Request
+      - title: "🔗 Acompanhar Pull Request no GitHub"
         url: ${{ steps['create-pr'].output.remoteUrl }}
+    text:
+      - title: "📘 Como funciona este provisionamento?"
+        content: |
+          Parabéns! O seu recurso foi solicitado.
+
+          ### 🚀 Fluxo de Provisionamento
+          ![Fluxo GitOps](https://raw.githubusercontent.com/marcelo-luizz/gitops-core-infra/main/crossplane/templates/compute/compute-engine/gitops-app-infra.png)
+
+          ### 📂 Destino do Manifesto
+          O arquivo foi enviado para o repositório **gitops-${{ parameters.scope }}**.
+          
+          **Caminho final:**
+          `environments/${{ parameters.environment }}/${{ (parameters.team | parseEntityRef).name if parameters.scope == 'app-infra' else 'southamerica-east1' }}/compute/compute-engine/${{ parameters.instanceName }}`
