@@ -30,7 +30,7 @@ spec:
           title: Environment
           type: string
           enum:
-            - dev
+            - stage
             - homolog
             - prod
           default: dev
@@ -68,7 +68,7 @@ spec:
         # Pegamos o arquivo renderizado na pasta temporária
         sourcePath: ./infra-temp
         # E jogamos para a pasta de destino final no GitOps
-        targetPath: environments/${{ parameters.environment }}/${{ parameters.region }}/teams/${{ parameters.team }}/bucket/${{ parameters.bucketname }}/
+        targetPath: environments/${{ parameters.environment }}/teams/${{ parameters.team }}/${{ parameters.region }}/bucket/${{ parameters.bucketname }}/
 
   output:
     links:
