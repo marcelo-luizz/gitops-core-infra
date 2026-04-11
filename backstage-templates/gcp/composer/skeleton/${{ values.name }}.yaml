@@ -1,18 +1,15 @@
-apiVersion: sql.gcp.m.upbound.io/v1beta1
-kind: DatabaseInstance
+apiVersion: composer.gcp.m.upbound.io/v1beta1
+kind: Environment
 metadata:
+  annotations:
+  labels:
+    testing.upbound.io/example-name: composer-environment
   name: ${{ values.name }}
   namespace: crossplane-system
 spec:
   forProvider:
-    databaseVersion: MYSQL_5_7
-    deletionProtection: false
-    region: us-central1
-    settings:
-      diskSize: 20
-      tier: db-f1-micro
-  providerConfigRef:
-    name: default
-    kind: ProviderConfig
-  writeConnectionSecretToRef:
-    name: ${{ values.name }}-sql-db-instance-secret
+    region: southamerica-east1
+    config:
+      nodeCount: 2
+      softwareConfig:
+        imageVersion: composer-2.0.0-airflow-2.2.5
