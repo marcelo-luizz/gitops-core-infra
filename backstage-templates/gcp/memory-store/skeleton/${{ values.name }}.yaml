@@ -1,16 +1,23 @@
-apiVersion: memorystore.gcp.m.upbound.io/v1beta1
+apiVersion: redis.gcp.m.upbound.io/v1beta1
 kind: Instance
 metadata:
   annotations:
+    meta.upbound.io/example-id: redis-instance
   labels:
-    testing.upbound.io/example-name: test-instance
+    testing.upbound.io/example-name: redis-instance
   name: ${{ values.name }}
   namespace: crossplane-system
 spec:
   forProvider:
-    deletionProtectionEnabled: false
-    location: southamerica-east1
-    shardCount: 1
+    authEnabled: false
+    labels:
+      environment: ${{ values.environment }}
+      team: ${{ (values.team | parseEntityRef).name }}
+    memorySizeGb: 1
+    region: southamerica-east1
+    tier: BASIC
+  writeConnectionSecretToRef:
+    name: example-redis-instance-secret
   providerConfigRef:
     name: default
     kind: ProviderConfig

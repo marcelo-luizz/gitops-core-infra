@@ -1,8 +1,8 @@
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: upbound-provider-gcp-redis
+  name: upbound-provider-gcp-memorystore
 spec:
-  package: xpkg.upbound.io/upbound/provider-gcp-redis:v2.4.0
+  package: xpkg.upbound.io/upbound/provider-gcp-memorystore:v2.4.0
   revisionActivationPolicy: Automatic
   revisionHistoryLimit: 1
