@@ -50,7 +50,7 @@ spec:
             - stage
             - homolog
             - prod
-          default: homolog
+          default: stage
         team:
           title: Time Responsável
           type: string
