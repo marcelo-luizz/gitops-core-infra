@@ -1,18 +1,106 @@
-apiVersion: sql.gcp.m.upbound.io/v1beta1
-kind: DatabaseInstance
+# apiVersion: sql.gcp.m.upbound.io/v1beta1
+# kind: DatabaseInstance
+# metadata:
+#   name: ${{ values.name }}
+#   namespace: crossplane-system
+# spec:
+#   forProvider:
+#     databaseVersion: MYSQL_5_7
+#     deletionProtection: false
+#     region: us-central1
+#     settings:
+#       diskSize: 20
+#       tier: db-f1-micro
+#   providerConfigRef:
+#     name: default
+#     kind: ProviderConfig
+#   writeConnectionSecretToRef:
+#     name: ${{ values.name }}-sql-db-instance-secret
+
+{% set resourceName = name %}
+{% set dlqName = name + "-dlq" %}
+
+---
+# Tópico Principal
+apiVersion: pubsub.gcp.m.upbound.io/v1beta1
+kind: Topic
 metadata:
-  name: ${{ values.name }}
-  namespace: crossplane-system
+  name: {{ resourceName }}
+  labels:
+    team: {{ team }}
+    env: {{ environment }}
+    resource-name: {{ resourceName }}
 spec:
-  forProvider:
-    databaseVersion: MYSQL_5_7
-    deletionProtection: false
-    region: us-central1
-    settings:
-      diskSize: 20
-      tier: db-f1-micro
+  forProvider: {}
   providerConfigRef:
     name: default
-    kind: ProviderConfig
-  writeConnectionSecretToRef:
-    name: ${{ values.name }}-sql-db-instance-secret
+
+---
+# Subscription Principal
+apiVersion: pubsub.gcp.m.upbound.io/v1beta1
+kind: Subscription
+metadata:
+  name: {{ resourceName }}
+spec:
+  forProvider:
+    topicSelector:
+      matchLabels:
+        resource-name: {{ resourceName }}
+    ackDeadlineSeconds: 20
+    {% if dlqEnabled %}
+    # Configuração da DLQ quando ativado
+    deadLetterPolicy:
+      - deadLetterTopicSelector:
+          matchLabels:
+            resource-name: {{ dlqName }}
+        maxDeliveryAttempts: 5
+    {% endif %}
+  providerConfigRef:
+    name: default
+
+{% if dlqEnabled %}
+---
+# Tópico de DLQ
+apiVersion: pubsub.gcp.m.upbound.io/v1beta1
+kind: Topic
+metadata:
+  name: {{ dlqName }}
+  labels:
+    resource-name: {{ dlqName }}
+spec:
+  forProvider: {}
+  providerConfigRef:
+    name: default
+
+---
+# Subscription de DLQ (Para drenar as mensagens presas)
+apiVersion: pubsub.gcp.m.upbound.io/v1beta1
+kind: Subscription
+metadata:
+  name: {{ dlqName }}
+spec:
+  forProvider:
+    topicSelector:
+      matchLabels:
+        resource-name: {{ dlqName }}
+    ackDeadlineSeconds: 20
+  providerConfigRef:
+    name: default
+
+---
+# Permissão Necessária: PubSub Service Agent -> Publicar na DLQ
+apiVersion: pubsub.gcp.m.upbound.io/v1beta1
+kind: TopicIAMMember
+metadata:
+  name: "{{ dlqName }}-auth"
+spec:
+  forProvider:
+    role: roles/pubsub.publisher
+    # Note: O número do projeto pode ser injetado via parâmetro se for variável
+    member: "serviceAccount:service-509332012213@gcp-sa-pubsub.iam.gserviceaccount.com"
+    topicSelector:
+      matchLabels:
+        resource-name: {{ dlqName }}
+  providerConfigRef:
+    name: default
+{% endif %}
