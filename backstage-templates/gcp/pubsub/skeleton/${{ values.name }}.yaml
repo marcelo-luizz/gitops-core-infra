@@ -30,7 +30,7 @@ spec:
     ackDeadlineSeconds: 20
     {% if values.dlqEnabled == true or values.dlqEnabled == "true" %}
     deadLetterPolicy:
-      - deadLetterTopicSelector:
+        deadLetterTopicSelector:
           matchLabels:
             resource-name: ${{ values.name }}-dlq
         maxDeliveryAttempts: 5
