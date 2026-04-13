@@ -11,6 +11,7 @@ spec:
   forProvider: {}
   providerConfigRef:
     name: default
+    kind: ProviderConfig
 
 ---
 # Subscription Principal
@@ -40,6 +41,7 @@ spec:
     {% endif %}
   providerConfigRef:
     name: default
+    kind: ProviderConfig
 
 {% if values.dlqEnabled == true or values.dlqEnabled == "true" %}
 ---
@@ -56,6 +58,7 @@ spec:
   forProvider: {}
   providerConfigRef:
     name: default
+    kind: ProviderConfig
 
 ---
 # Subscription de DLQ (Para drenar as mensagens presas)
@@ -78,6 +81,7 @@ spec:
       ttl: "2678400s"
   providerConfigRef:
     name: default
+    kind: ProviderConfig
 
 ---
 # Permissão Necessária: PubSub Service Agent -> Publicar na DLQ
@@ -94,6 +98,7 @@ spec:
         resource-name: ${{ values.name }}-dlq
   providerConfigRef:
     name: default
+    kind: ProviderConfig
 ---
 # Isso resolve o erro "Assign Subscriber role"
 apiVersion: pubsub.gcp.m.upbound.io/v1beta1
