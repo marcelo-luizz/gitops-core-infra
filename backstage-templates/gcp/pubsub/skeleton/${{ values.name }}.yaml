@@ -27,7 +27,10 @@ spec:
     topicSelector:
       matchLabels:
         resource-name: ${{ values.name }}-topic
-    ackDeadlineSeconds: 20
+    ackDeadlineSeconds: 30
+    messageRetentionDuration: "172800s"
+    expirationPolicy:
+      ttl: "2678400s"
     {% if values.dlqEnabled == true or values.dlqEnabled == "true" %}
     deadLetterPolicy:
         deadLetterTopicSelector:
@@ -69,7 +72,10 @@ spec:
     topicSelector:
       matchLabels:
         resource-name: ${{ values.name }}-dlq
-    ackDeadlineSeconds: 20
+    ackDeadlineSeconds: 30
+    messageRetentionDuration: "172800s"
+    expirationPolicy:
+      ttl: "2678400s"
   providerConfigRef:
     name: default
 
@@ -82,11 +88,26 @@ metadata:
 spec:
   forProvider:
     role: roles/pubsub.publisher
-    # Service Agent padrão do PubSub (O número 509332012213 é o do seu projeto atual)
     member: "serviceAccount:service-509332012213@gcp-sa-pubsub.iam.gserviceaccount.com"
     topicSelector:
       matchLabels:
         resource-name: ${{ values.name }}-dlq
   providerConfigRef:
     name: default
+---
+# Isso resolve o erro "Assign Subscriber role"
+apiVersion: pubsub.gcp.m.upbound.io/v1beta1
+kind: SubscriptionIAMMember
+metadata:
+  name: "${{ values.name }}-subscriber-auth"
+spec:
+  forProvider:
+    role: roles/pubsub.subscriber
+    member: "serviceAccount:service-509332012213@gcp-sa-pubsub.iam.gserviceaccount.com"
+    subscriptionSelector:
+      matchLabels:
+        resource-name: ${{ values.name }}-subscription
+  providerConfigRef:
+    name: default
+    kind: ProviderConfig
 {% endif %}
