@@ -6,7 +6,7 @@ metadata:
   labels:
     team: ${{ (values.team | parseEntityRef).name if values.team else "no-team" }}
     env: ${{ values.environment }}
-    resource-name: ${{ values.name }}
+    resource-name: ${{ values.name }}-topic
 spec:
   forProvider: {}
   providerConfigRef:
