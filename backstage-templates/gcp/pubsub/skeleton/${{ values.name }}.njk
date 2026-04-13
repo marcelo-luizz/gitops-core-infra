@@ -17,19 +17,16 @@
 #   writeConnectionSecretToRef:
 #     name: ${{ values.name }}-sql-db-instance-secret
 
-{% set resourceName = name %}
-{% set dlqName = name + "-dlq" %}
-
 ---
 # Tópico Principal
 apiVersion: pubsub.gcp.m.upbound.io/v1beta1
 kind: Topic
 metadata:
-  name: {{ resourceName }}
+  name: ${{ values.name }}
   labels:
-    team: {{ team }}
-    env: {{ environment }}
-    resource-name: {{ resourceName }}
+    team: ${{ (values.team | parseEntityRef).name if values.team else "no-team" }}
+    env: ${{ values.environment }}
+    resource-name: ${{ values.name }}
 spec:
   forProvider: {}
   providerConfigRef:
@@ -40,33 +37,33 @@ spec:
 apiVersion: pubsub.gcp.m.upbound.io/v1beta1
 kind: Subscription
 metadata:
-  name: {{ resourceName }}
+  name: ${{ values.name }}
 spec:
   forProvider:
     topicSelector:
       matchLabels:
-        resource-name: {{ resourceName }}
+        resource-name: ${{ values.name }}
     ackDeadlineSeconds: 20
-    {% if dlqEnabled %}
+    {% if values.dlqEnabled == true or values.dlqEnabled == "true" %}
     # Configuração da DLQ quando ativado
     deadLetterPolicy:
       - deadLetterTopicSelector:
           matchLabels:
-            resource-name: {{ dlqName }}
+            resource-name: ${{ values.name }}-dlq
         maxDeliveryAttempts: 5
     {% endif %}
   providerConfigRef:
     name: default
 
-{% if dlqEnabled %}
+{% if values.dlqEnabled == true or values.dlqEnabled == "true" %}
 ---
 # Tópico de DLQ
 apiVersion: pubsub.gcp.m.upbound.io/v1beta1
 kind: Topic
 metadata:
-  name: {{ dlqName }}
+  name: ${{ values.name }}-dlq
   labels:
-    resource-name: {{ dlqName }}
+    resource-name: ${{ values.name }}-dlq
 spec:
   forProvider: {}
   providerConfigRef:
@@ -77,12 +74,12 @@ spec:
 apiVersion: pubsub.gcp.m.upbound.io/v1beta1
 kind: Subscription
 metadata:
-  name: {{ dlqName }}
+  name: ${{ values.name }}-dlq
 spec:
   forProvider:
     topicSelector:
       matchLabels:
-        resource-name: {{ dlqName }}
+        resource-name: ${{ values.name }}-dlq
     ackDeadlineSeconds: 20
   providerConfigRef:
     name: default
@@ -92,15 +89,15 @@ spec:
 apiVersion: pubsub.gcp.m.upbound.io/v1beta1
 kind: TopicIAMMember
 metadata:
-  name: "{{ dlqName }}-auth"
+  name: "${{ values.name }}-dlq-auth"
 spec:
   forProvider:
     role: roles/pubsub.publisher
-    # Note: O número do projeto pode ser injetado via parâmetro se for variável
+    # Service Agent padrão do PubSub (O número 509332012213 é o do seu projeto atual)
     member: "serviceAccount:service-509332012213@gcp-sa-pubsub.iam.gserviceaccount.com"
     topicSelector:
       matchLabels:
-        resource-name: {{ dlqName }}
+        resource-name: ${{ values.name }}-dlq
   providerConfigRef:
     name: default
 {% endif %}
