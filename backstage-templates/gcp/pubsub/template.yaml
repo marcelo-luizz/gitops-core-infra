@@ -42,7 +42,12 @@ spec:
             - us-central1
             - us-east1
             - southamerica-east1
-          default: southamerica-east1  
+          default: southamerica-east1
+        dlqEnabled:
+          title: Habilitar DLQ?
+          type: boolean
+          description: Cria automaticamente um tópico e subscription de Dead Letter Queue.
+          default: false
         environment:
           title: Environment
           type: string
@@ -66,10 +71,11 @@ spec:
         url: ./skeleton
         values:
           name: ${{ parameters.pubsubName }}
+          region: ${{ parameters.region }}
           environment: ${{ parameters.environment }}
           team: ${{ parameters.team }}
-          region: ${{ parameters.region }}
           scope: ${{ parameters.scope }}
+          dlqEnabled: ${{ parameters.dlqEnabled }}
         targetPath: ./infra-temp
 
     - id: create-pr
